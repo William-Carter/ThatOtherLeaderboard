@@ -67,7 +67,7 @@ def addRun(discordID: str, category: str, time: str, date: str="now", srcomID: s
 
 
     # Check if runner already has a run with this time
-    playerRuns = dbManager.getPlayerRuns(playerID, category)
+    playerRuns = [x[1] for x in dbManager.getPlayerRuns(playerID, category)]
     if timeNum in playerRuns:
         return "Run already tracked"
     
