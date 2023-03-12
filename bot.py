@@ -120,6 +120,17 @@ async def on_message(message):
         await message.channel.send(response)
             
 
+    if messageParts[0] == ".leaderboard":
+        if len(messageParts) == 2:
+            response = controller.getLeaderboard(messageParts[1])
+
+        elif len(messageParts) == 3:
+            response = controller.getLeaderboard(messageParts[1], messageParts[2])
+        else:
+            response = "No category supplied"
+
+        await message.channel.send(response)
+            
 
     #################################
     # Administrative Commands Below #

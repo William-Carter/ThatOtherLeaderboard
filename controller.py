@@ -139,3 +139,24 @@ def formatLeaderBoardPosition(position: int):
 
 def getRunPlace(runID):
     return dbManager.fetchLeaderboardPlace(runID)
+
+
+def getLeaderboard(category, start=1):
+    if not category in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+        return "Invalid category!"
+    try:
+        start= int(start)-1
+    except:
+        return "Invalid starting position!"
+
+    leaderboard = dbManager.generateLeaderboard(category)[start:]
+    response = f"`Leaderboard for {category}:`\n"
+    maxNameLength = max([len(x[0]) for x in leaderboard[:20]])
+    for i in range(min(len(leaderboard), 20)):
+        place = str(i+start+1)
+        name = leaderboard[i][0]
+        time = leaderboard[i][1]
+        time = time+('0'*(3-len(time.split(".")[1])))
+        response += f"`{' '*(2-len(place))}{place}. {name}{' '*(maxNameLength-len(name)+1)} {time}{' '*(9-len(time))}`\n"
+    
+    return response
