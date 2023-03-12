@@ -41,7 +41,11 @@ async def on_message(message):
 
         else:
             helpMessages = {"submit": 
-                            "Submit a run.\nUsage:\n`.submit category time [date=x] [srcomid=x]`\nValid categories are oob, inbounds, unrestricted, legacy or glitchless\nFields in brackets require identifiers (`field=value`)\nDate should be formatted as yyyy-mm-dd. Current UTC date will be used if not supplied.\nsrcomid refers to the ID of your run on speedrun.com. Only necessary for runs that are currently in queue.\nExample submission:\n`.submit glitchless 16:16.05 date=2022-10-09`"}
+                            "Submit a run.\nUsage:\n`.submit (category) (time) [date=x] [srcomid=x]`\nValid categories are oob, inbounds, unrestricted, legacy or glitchless\nFields in brackets require identifiers (`field=value`)\nDate should be formatted as yyyy-mm-dd. Current UTC date will be used if not supplied.\nsrcomid refers to the ID of your run on speedrun.com. Only necessary for runs that are currently in queue.\nExample submission:\n`.submit glitchless 16:16.05 date=2022-10-09`",
+                            "register":
+                            "Register to tol.\nUsage:\n`.register (speedrun.com username)`",
+                            "leaderboard":
+                            "Show the leaderboard for a given category.\nUsage:\n`.leaderboard (category) [startpoint]`\nTo view runs starting at a certain point in the rankings, add startpoint."}
             if messageParts[1].strip(".")  in helpMessages.keys():
                 await message.channel.send(helpMessages[messageParts[1].strip(".")])
             else:
@@ -130,7 +134,15 @@ async def on_message(message):
             response = "No category supplied"
 
         await message.channel.send(response)
-            
+
+
+    if messageParts[0] == ".myruns":
+        response = controller.getRunsDisplay(message.author.id)
+        await message.channel.send(response)
+
+    if messageParts[0] == ".edit":
+        if len(messageParts) != 3:
+            response = "Invalid arguments. Do .help edit to see"
 
     #################################
     # Administrative Commands Below #

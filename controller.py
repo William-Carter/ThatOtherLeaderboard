@@ -1,6 +1,6 @@
 import dbManager
 import datetime
-import time
+import math
 import durations
 import srcomAPIHandler
 import sheetsInterface
@@ -160,3 +160,17 @@ def getLeaderboard(category, start=1):
         response += f"`{' '*(2-len(place))}{place}. {name}{' '*(maxNameLength-len(name)+1)} {time}{' '*(9-len(time))}`\n"
     
     return response
+
+
+def getRunsDisplay(discordID, page=1):
+    tolID = dbManager.getTolAccountID(discordID=discordID)
+    playerRuns = []
+    for category in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+        playerRuns += [[x[0], category, durations.formatted(x[1])] for x in dbManager.getPlayerRuns(tolID, category, includeSrcom=False, propagate=False)]
+
+    responseHead = f"`Showing {min(20, len(playerRuns))} of {len(playerRuns)} runs`\n"
+    for run in playerRuns:
+        responseHead += f"`{run[0]}, {run[1]}, {run[2]}`\n"
+
+
+    return responseHead

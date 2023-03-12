@@ -155,23 +155,35 @@ def getSrcomIDFromTolID(tolAccount):
         return result[0][0]
 
 
-def getPlayerRuns(tolAccount, category):
+def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
-    srcomID = getSrcomIDFromTolID(tolAccount)
-    cur.execute("""
-    SELECT hierarchy
-    FROM categoryHierarchy
-    WHERE categoryName = ?
-    """, (category,))
-    categoryHierarchy = cur.fetchone()[0]
-    cur.execute(
-        """
-        SELECT ID, time 
-        FROM runs
-        LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
-        WHERE categoryHierarchy.hierarchy >= ? AND (tolAccount = ? OR srcomAccount = ?)
-    """, (categoryHierarchy, tolAccount, srcomID))
+    if includeSrcom:
+        srcomID = getSrcomIDFromTolID(tolAccount)
+    else:
+        srcomID = ""
+    if propagate:
+        cur.execute("""
+        SELECT hierarchy
+        FROM categoryHierarchy
+        WHERE categoryName = ?
+        """, (category,))
+        categoryHierarchy = cur.fetchone()[0]
+        cur.execute(
+            """
+            SELECT ID, time 
+            FROM runs
+            LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
+            WHERE categoryHierarchy.hierarchy >= ? AND (tolAccount = ? OR srcomAccount = ?)
+        """, (categoryHierarchy, tolAccount, srcomID))
+
+    else:
+        cur.execute(
+            """
+            SELECT ID, time 
+            FROM runs
+            WHERE category = ? AND (tolAccount = ? OR srcomAccount = ?)
+        """, (category, tolAccount, srcomID))
     runs = [[x[0], x[1]] for x in cur.fetchall()]
     conn.close()
     return runs
