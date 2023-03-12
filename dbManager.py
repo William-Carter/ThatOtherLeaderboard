@@ -161,7 +161,7 @@ def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True):
     if includeSrcom:
         srcomID = getSrcomIDFromTolID(tolAccount)
     else:
-        srcomID = ""
+        srcomID = ""    
     if propagate:
         cur.execute("""
         SELECT hierarchy
@@ -292,8 +292,9 @@ def generateLeaderboard(category):
 
 
 
-def fetchLeaderboardPlace(runID):
-    category = getCategoryFromRunID(runID)
+def fetchLeaderboardPlace(runID, category=None):
+    if not category:
+        category = getCategoryFromRunID(runID)
     if not category:
         return False
     with open(dirPath+"/leaderboardReferences/"+category+".csv", "r") as f:

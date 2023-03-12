@@ -108,20 +108,21 @@ async def on_message(message):
             personalBests = controller.getProfileFromDiscordName(messageParts[1])
             if not personalBests:
                 await message.channel.send("Unknown user")
+            else:
 
-        if len(personalBests.keys()) > 0:
-            for category in personalBests.keys():
-                position = controller.formatLeaderBoardPosition(controller.getRunPlace(personalBests[category][0]))
-                time = durations.formatted(personalBests[category][1])
-                forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
-                response += f"`{forCats[category]}{' '*(15-len(forCats[category]))}{time}{' '*(13-len(time))}{position}`\n"
+                if len(personalBests.keys()) > 0:
+                    for category in personalBests.keys():
+                        position = controller.formatLeaderBoardPosition(controller.getRunPlace(personalBests[category][0], category))
+                        time = durations.formatted(personalBests[category][1])
+                        forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
+                        response += f"`{forCats[category]}{' '*(15-len(forCats[category]))}{time}{' '*(13-len(time))}{position}`\n"
 
 
-        else:
-            response = "No PBs tracked."
-            
+                else:
+                    response = "No PBs tracked."
+                    
 
-        await message.channel.send(response)
+                await message.channel.send(response)
             
 
     if messageParts[0] == ".leaderboard":

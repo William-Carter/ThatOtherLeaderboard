@@ -137,8 +137,8 @@ def formatLeaderBoardPosition(position: int):
     return str(position)+suffix
 
 
-def getRunPlace(runID):
-    return dbManager.fetchLeaderboardPlace(runID)
+def getRunPlace(runID, category):
+    return dbManager.fetchLeaderboardPlace(runID, category)
 
 
 def getLeaderboard(category, start=1):
