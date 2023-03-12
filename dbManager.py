@@ -214,6 +214,12 @@ def identicalRunTracked(srcomAccount, category, time):
 def generateLeaderboard(category):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
+    cur.execute("""
+    SELECT hierarchy
+    FROM categoryHierarchy
+    WHERE categoryName = ?
+    """, (category,))
+    categoryHierarchy = cur.fetchone()[0]
     cur.execute(
         """
         SELECT srca.name, srcb.name, MIN(runs.time), runs.ID
@@ -221,11 +227,12 @@ def generateLeaderboard(category):
         LEFT JOIN srcomAccounts srca ON runs.srcomAccount = srca.ID
         LEFT JOIN tolAccounts ON runs.tolAccount = tolAccounts.ID
         LEFT JOIN srcomAccounts srcb ON tolAccounts.srcomID = srcb.ID
-        WHERE runs.category = ?
+        LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
+        WHERE categoryHierarchy.hierarchy >= ?
         GROUP BY srca.ID, tolAccounts.ID, srcb.ID
 
         ORDER BY runs.time
-        """, (category,))
+        """, (categoryHierarchy,))
     
     result = cur.fetchall()
     output = {}

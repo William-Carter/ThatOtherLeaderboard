@@ -35,4 +35,21 @@ CREATE TABLE runs(
 )
 """)
 
+cur.execute("""
+CREATE TABLE "categoryHierarchy" (
+	"categoryName"	TEXT,
+	"hierarchy"	INTEGER NOT NULL,
+	PRIMARY KEY("categoryName")
+)  
+)
+""")
+
+categoryHierarchy = {"oob": 1, "inbounds": 2, "unrestricted": 3, "legacy": 4, "glitchless": 5}
+for item in categoryHierarchy.keys():
+    cur.execute("""
+    INSERT INTO categoryHierarchy VALUES (?, ?)
+    """, (item, categoryHierarchy[item]))
+
+
+
 conn.commit()
