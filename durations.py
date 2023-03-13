@@ -21,6 +21,7 @@ def formatted(timeNum: float):
         else:
             result = str(minutes)+":"+result
 
+    result = result+('0'*(3-len(result.split(".")[-1])))
     return result
 
 if __name__ == "__main__":
