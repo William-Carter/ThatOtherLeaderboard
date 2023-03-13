@@ -145,6 +145,33 @@ async def on_message(message):
         if len(messageParts) != 3:
             response = "Invalid arguments. Do .help edit to see"
 
+
+    if messageParts[0] == ".ilsubmit":
+
+        if controller.playerRegistered(message.author.id):
+            if len(messageParts) > 1:
+                if len(message.attachments) > 0:
+                    if len(messageParts) > 2:
+                        date = messageParts[2]
+                    else:
+                        date = "now"
+                    if message.attachments[0].filename.split(".")[-1] == "dem":
+                        response = await controller.submitIL(messageParts[1], message.attachments[0], date, message.author.id)
+                    else:
+                        respone = "File attached is not demo!"
+
+                else:
+                    response = "No demo supplied!"
+
+            else:
+                response = "No category supplied!"
+
+        else:
+            response = "Account not registered!\n Please register with .register first."
+                    
+
+        await message.channel.send(response)
+
     #################################
     # Administrative Commands Below #
     #################################

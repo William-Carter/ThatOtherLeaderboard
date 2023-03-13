@@ -1,9 +1,11 @@
 import dbManager
 import datetime
-import math
 import durations
 import srcomAPIHandler
 import sheetsInterface
+import os
+import untitledParserParser
+dirPath = os.path.dirname(os.path.realpath(__file__))
 
 
     
@@ -174,3 +176,58 @@ def getRunsDisplay(discordID, page=1):
 
 
     return responseHead
+
+
+async def submitIL(category, attachment, date, senderID):
+    dateFormat = "%Y-%m-%d"
+    if not category in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+        return "Invalid category!"
+    
+    if date == "now":
+        date = datetime.datetime.utcnow().strftime(dateFormat)
+
+    try:
+        datetime.datetime.strptime(date, dateFormat)
+    except:
+        return "Invalid date format!"
+
+    demoPath = dirPath+"/demos/temp/"+str(attachment.id)+".dem"
+    with open(demoPath, "wb") as f:
+        demoBytes = await attachment.read()
+        f.write(demoBytes)
+    demo = untitledParserParser.DemoParse(demoPath)
+    tolID = dbManager.getTolAccountID(discordID=senderID)
+    level = demo.map
+    time = demo.time
+
+    ilID = dbManager.insertIL(level, category, time, date, tolID)
+    folderPath = dirPath+"/demos/ILs/"+str(ilID)
+    os.mkdir(folderPath)
+    os.rename(demoPath, folderPath+"/"+str(ilID)+".dem")
+
+    levelNames = {
+        "testchmb_a_00": "00/01",
+        "testchmb_a_01": "02/03",
+        "testchmb_a_02": "04/05",
+        "testchmb_a_03": "06/07",
+        "testchmb_a_04": "08",
+        "testchmb_a_05": "09",
+        "testchmb_a_06": "10",
+        "testchmb_a_07": "11/12",
+        "testchmb_a_08": "13",
+        "testchmb_a_09": "14",
+        "testchmb_a_10": "15",
+        "testchmb_a_11": "16",
+        "testchmb_a_13": "17",
+        "testchmb_a_14": "18",
+        "testchmb_a_15": "19",
+        "escape_00": "e00",
+        "escape_01": "e01",
+        "escape_02": "e02"
+    }
+    
+    return f"Succesfully submitted a time of {durations.formatted(time)} to {levelNames[level]} {category}"
+
+    
+    
+    

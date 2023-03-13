@@ -50,6 +50,21 @@ for item in categoryHierarchy.keys():
     INSERT INTO categoryHierarchy VALUES (?, ?)
     """, (item, categoryHierarchy[item]))
 
+cur.execute("""
+CREATE TABLE "ilRuns" (
+	"ID"	INTEGER UNIQUE,
+	"level"	TEXT NOT NULL,
+	"category"	TEXT,
+	"time"	REAL,
+	"date"	TEXT,
+	"tolAccount"	INTEGER,
+	"srcomAccount"	TEXT,
+	"srcomID"	TEXT,
+	FOREIGN KEY("tolAccount") REFERENCES "tolAccounts"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
+)
+""")
+
 
 
 conn.commit()

@@ -57,6 +57,15 @@ def insertRun(category: str, time: float, date: str, tolAccount: int = None, src
     conn.commit()
 
 
+def insertIL(level: str, category: str, time: float, date: str, tolAccount: int = None, srcomAccount: str = None, srcomID: str = None):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+
+    cur.execute("INSERT INTO ilRuns (level, category, time, date, tolAccount, srcomAccount, srcomID) VALUES (?, ?, ?, ?, ?, ?, ?)", (level, category, time, date, tolAccount, srcomAccount, srcomID))
+    idNum = cur.lastrowid
+    conn.commit()
+    return idNum
+
 def userAlreadyRegistered(discordID: str) -> bool:
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
