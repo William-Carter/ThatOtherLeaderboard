@@ -51,35 +51,6 @@ async def on_message(message):
             else:
                 await message.channel.send(f"No help page for {messageParts[1]}")
 
-    if messageParts[0] == ".submit":
-        args = len(messageParts)-1
-        if args < 2:
-            await message.channel.send("Invalid submission! use `.help submit` for help on submitting.")
-        elif messageParts[1] not in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
-            await message.channel.send("Invalid category! use `.help submit` for a list of valid categories.")
-        elif not durations.seconds(messageParts[2]): # Should maybe be handled in controller.py?
-            await message.channel.send("Invalid run duration!")
-
-        else:
-            forcePB = False
-            date = "now"
-            srcomID = None
-            for argument in messageParts[3:]:
-
-                argParts = argument.split("=")
-                if argParts[0] == "date":
-                    date = argParts[1]
-                if argParts[0] == "srcomid":
-                    srcomID = argParts[1]
-
-            output = controller.addRun(
-                message.author.id, 
-                messageParts[1], 
-                messageParts[2], 
-                date = date, 
-                srcomID = srcomID
-                )
-            await message.channel.send(output)
 
 
         
@@ -129,7 +100,7 @@ async def on_message(message):
         if len(messageParts) == 2:
             response = controller.getLeaderboard(messageParts[1])
 
-        elif len(messageParts) == 3:
+        elif len(messageParts) >= 3:
             response = controller.getLeaderboard(messageParts[1], messageParts[2])
         else:
             response = "No category supplied"
@@ -145,6 +116,50 @@ async def on_message(message):
         if len(messageParts) != 3:
             response = "Invalid arguments. Do .help edit to see"
 
+
+
+
+    ###############################
+    # Trusted-only Commands Below #
+    ###############################
+    
+    if messageParts[0] == ".submit":
+        if message.guild.id == 1081155162065862697:
+            if "Trusted" in [role.name for role in message.author.roles]:
+                args = len(messageParts)-1
+                if args < 2:
+                    await message.channel.send("Invalid submission! use `.help submit` for help on submitting.")
+                elif messageParts[1] not in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+                    await message.channel.send("Invalid category! use `.help submit` for a list of valid categories.")
+                elif not durations.seconds(messageParts[2]): # Should maybe be handled in controller.py?
+                    await message.channel.send("Invalid run duration!")
+
+                else:
+                    forcePB = False
+                    date = "now"
+                    srcomID = None
+                    for argument in messageParts[3:]:
+
+                        argParts = argument.split("=")
+                        if argParts[0] == "date":
+                            date = argParts[1]
+                        if argParts[0] == "srcomid":
+                            srcomID = argParts[1]
+
+                    output = controller.addRun(
+                        message.author.id, 
+                        messageParts[1], 
+                        messageParts[2], 
+                        date = date, 
+                        srcomID = srcomID
+                        )
+                    await message.channel.send(output)
+
+            else:
+                await message.channel.send("Run submission is restricted to trusted users!")
+
+        else:
+            await message.channel.send("Run submission is only available on the official TOL server!")
     #################################
     # Administrative Commands Below #
     #################################
