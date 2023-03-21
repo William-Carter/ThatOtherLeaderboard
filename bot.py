@@ -65,7 +65,6 @@ async def on_message(message):
 
     if messageParts[0] == ".profile":
         
-        
         if len(messageParts) == 1:
             response = f"Profile for {message.author.name}:\n"
             if not controller.playerRegistered(message.author.id):
@@ -84,7 +83,7 @@ async def on_message(message):
             if len(personalBests.keys()) > 0:
                 for category in personalBests.keys():
                     position = controller.formatLeaderBoardPosition(controller.getRunPlace(personalBests[category][0], category))
-                    time = durations.formatted(personalBests[category][1])
+                    time = durations.formatted(personalBests[category][1])  
                     forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
                     response += f"`{forCats[category]}{' '*(15-len(forCats[category]))}{time}{' '*(13-len(time))}{position}`\n"
 
@@ -95,6 +94,25 @@ async def on_message(message):
 
             await message.channel.send(response)
             
+
+
+    if messageParts[0] == ".setup":
+        setup = controller.getSetup(message.author.id)
+        if setup == "noentries":
+            await message.channel.send(f"No setup information has been set")
+        response = f"{message.author.name}'s setup:\n"
+        for type in setup.keys():
+            response += f"{type}: {setup[type]}\n"
+
+        await message.channel.send(response)
+
+    if messageParts[0] == ".updatesetup":
+        if len(messageParts) > 2:
+            response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+        else:
+            response = "Incorrect number of arguments! Use .help updatesetup for more information."
+
+        await message.channel.send(response)
 
     if messageParts[0] == ".leaderboard":
         if len(messageParts) == 2:
@@ -112,9 +130,11 @@ async def on_message(message):
         response = controller.getRunsDisplay(message.author.id)
         await message.channel.send(response)
 
+    """
     if messageParts[0] == ".edit":
         if len(messageParts) != 3:
             response = "Invalid arguments. Do .help edit to see"
+            """
 
 
 

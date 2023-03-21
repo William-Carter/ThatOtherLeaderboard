@@ -174,3 +174,57 @@ def getRunsDisplay(discordID, page=1):
 
 
     return responseHead
+
+
+def getSetup(discordID):
+    tolID = dbManager.getTolAccountID(discordID=discordID)
+    setup = dbManager.getSetupFromTolID(tolID)
+    if not setup:
+        return "noentries"
+    setupDict = {}
+    capitalisations = {"sensitivity": "Sensitivity", "mouse": "Mouse", "keyboard": "Keyboard", "dpi": "DPI"}
+    for entry in setup:
+        element = capitalisations[entry[0]]
+        setupDict[element] = entry[1]
+
+    order = {"sensitivity": 2, "mouse": 3, "keyboard": 4, "dpi": 1}
+    setupDict = dict(sorted(setupDict.items(), key= lambda item: order[item[0].lower()]))
+
+    if "Sensitivity" in setupDict.keys() and "DPI" in setupDict.keys():
+        edpi = int(setupDict["DPI"])*float(setupDict["Sensitivity"])
+        setupDict["Effective DPI"] = edpi
+
+    if len(setupDict) == 0:
+        return "nodata"
+    
+    
+    return setupDict
+
+def updateSetup(discordID: str, element: str, value: str):
+    element = element.lower()
+    acceptedElements = ["keyboard", "mouse", "sensitivity", "dpi"]
+    if not element.lower() in acceptedElements:
+        return "Unknown setup element!"
+    
+    if element == "dpi":
+        try:
+            inted = int(value)
+            if inted < 0:
+                return "DPI must be positive!"
+            floated = float(value)
+            if float(inted) != floated:
+                return "DPI must be a valid integer!"
+            
+        except:
+            return "DPI must be a valid integer!"
+        
+    if element == "sensitivity":
+        try:
+            floated = float(value)
+            if floated < 0:
+                return "Sensitivity must be positive!"
+        except:
+            return "Sensitivity must be a valid number!"
+    tolID = dbManager.getTolAccountID(discordID=discordID)
+    dbManager.insertOrUpdateSetupElement(tolID, element, value)
+    return "Setup succesfully updated."

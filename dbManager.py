@@ -36,6 +36,16 @@ def insertTolAccount(name: str, discordID: str = None, srcomID: str = None):
 
     
     cur.execute(command, bindings)
+    
+
+
+
+
+    cur.execute("""
+    INSERT INTO setupProfiles (tolAccountID)
+    VALUES (?)
+    """, (cur.lastrowid,)
+    )
 
     conn.commit()
 
@@ -56,6 +66,18 @@ def insertRun(category: str, time: float, date: str, tolAccount: int = None, src
     cur.execute("INSERT INTO runs (category, time, date, tolAccount, srcomAccount, srcomID) VALUES (?, ?, ?, ?, ?, ?)", (category, time, date, tolAccount, srcomAccount, srcomID))
     conn.commit()
 
+
+def insertOrUpdateSetupElement(tolID, element, value):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(tolAccountID) FROM setupElements WHERE tolAccountID=? AND element=?", (tolID, element))
+    if cur.fetchone()[0] == 0:
+        cur.execute("INSERT INTO setupElements VALUES (?, ?, ?)", (tolID, element, value))
+
+    else:
+        cur.execute("UPDATE setupElements SET value = ? WHERE tolAccountID=? AND element=?", (value, tolID, element))
+
+    conn.commit()
 
 def userAlreadyRegistered(discordID: str) -> bool:
     conn = sqlite3.connect(dirPath+"/tol.db")
@@ -333,3 +355,14 @@ def addSrcomIDToRun(runID, srcomID):
     cur = conn.cursor()
     cur.execute("UPDATE runs SET srcomID = ? WHERE ID = ?", (srcomID, runID))
     conn.commit()
+
+
+def getSetupFromTolID(tolID):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT element, value FROM setupElements WHERE tolAccountID = ?", (tolID,))
+    results = cur.fetchall()
+    if len(results) > 0:
+        return results
+    else:
+        return False
