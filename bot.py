@@ -100,11 +100,12 @@ async def on_message(message):
         setup = controller.getSetup(message.author.id)
         if setup == "noentries":
             await message.channel.send(f"No setup information has been set")
-        response = f"{message.author.name}'s setup:\n"
-        for type in setup.keys():
-            response += f"{type}: {setup[type]}\n"
+        else:
+            response = f"{message.author.name}'s setup:\n"
+            for type in setup.keys():
+                response += f"{type}: {setup[type]}\n"
 
-        await message.channel.send(response)
+            await message.channel.send(response)
 
     if messageParts[0] == ".updatesetup":
         if len(messageParts) > 2:

@@ -191,7 +191,7 @@ def getSetup(discordID):
     setupDict = dict(sorted(setupDict.items(), key= lambda item: order[item[0].lower()]))
 
     if "Sensitivity" in setupDict.keys() and "DPI" in setupDict.keys():
-        edpi = int(setupDict["DPI"])*float(setupDict["Sensitivity"])
+        edpi = round(int(setupDict["DPI"])*float(setupDict["Sensitivity"]), 3)
         setupDict["Effective DPI"] = edpi
 
     if len(setupDict) == 0:
