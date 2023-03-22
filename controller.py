@@ -182,12 +182,12 @@ def getSetup(discordID):
     if not setup:
         return "noentries"
     setupDict = {}
-    capitalisations = {"sensitivity": "Sensitivity", "mouse": "Mouse", "keyboard": "Keyboard", "dpi": "DPI"}
+    capitalisations = {"sensitivity": "Sensitivity", "mouse": "Mouse", "keyboard": "Keyboard", "dpi": "DPI", "hz": "Hz"}
     for entry in setup:
         element = capitalisations[entry[0]]
         setupDict[element] = entry[1]
 
-    order = {"sensitivity": 2, "mouse": 3, "keyboard": 4, "dpi": 1}
+    order = {"sensitivity": 2, "mouse": 4, "keyboard": 5, "dpi": 1, "hz": 3}
     setupDict = dict(sorted(setupDict.items(), key= lambda item: order[item[0].lower()]))
 
     if "Sensitivity" in setupDict.keys() and "DPI" in setupDict.keys():
@@ -202,7 +202,7 @@ def getSetup(discordID):
 
 def updateSetup(discordID: str, element: str, value: str):
     element = element.lower()
-    acceptedElements = ["keyboard", "mouse", "sensitivity", "dpi"]
+    acceptedElements = ["keyboard", "mouse", "sensitivity", "dpi", "hz"]
     if not element.lower() in acceptedElements:
         return "Unknown setup element!"
     
@@ -225,6 +225,16 @@ def updateSetup(discordID: str, element: str, value: str):
                 return "Sensitivity must be positive!"
         except:
             return "Sensitivity must be a valid number!"
+        
+
+    if element == "hz":
+        try:
+            floated = float(value)
+            if floated < 0:
+                return "Refresh rate must be positive!"
+        except:
+            return "Refresh rate must be a valid number!"
+
     tolID = dbManager.getTolAccountID(discordID=discordID)
     dbManager.insertOrUpdateSetupElement(tolID, element, value)
     return "Setup succesfully updated."
