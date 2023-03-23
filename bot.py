@@ -51,35 +51,6 @@ async def on_message(message):
             else:
                 await message.channel.send(f"No help page for {messageParts[1]}")
 
-    if messageParts[0] == ".submit":
-        args = len(messageParts)-1
-        if args < 2:
-            await message.channel.send("Invalid submission! use `.help submit` for help on submitting.")
-        elif messageParts[1] not in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
-            await message.channel.send("Invalid category! use `.help submit` for a list of valid categories.")
-        elif not durations.seconds(messageParts[2]): # Should maybe be handled in controller.py?
-            await message.channel.send("Invalid run duration!")
-
-        else:
-            forcePB = False
-            date = "now"
-            srcomID = None
-            for argument in messageParts[3:]:
-
-                argParts = argument.split("=")
-                if argParts[0] == "date":
-                    date = argParts[1]
-                if argParts[0] == "srcomid":
-                    srcomID = argParts[1]
-
-            output = controller.addRun(
-                message.author.id, 
-                messageParts[1], 
-                messageParts[2], 
-                date = date, 
-                srcomID = srcomID
-                )
-            await message.channel.send(output)
 
 
         
@@ -93,7 +64,6 @@ async def on_message(message):
 
 
     if messageParts[0] == ".profile":
-        
         
         if len(messageParts) == 1:
             response = f"Profile for {message.author.name}:\n"
@@ -113,7 +83,7 @@ async def on_message(message):
             if len(personalBests.keys()) > 0:
                 for category in personalBests.keys():
                     position = controller.formatLeaderBoardPosition(controller.getRunPlace(personalBests[category][0], category))
-                    time = durations.formatted(personalBests[category][1])
+                    time = durations.formatted(personalBests[category][1])  
                     forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
                     response += f"`{forCats[category]}{' '*(15-len(forCats[category]))}{time}{' '*(13-len(time))}{position}`\n"
 
@@ -125,11 +95,31 @@ async def on_message(message):
             await message.channel.send(response)
             
 
+
+    if messageParts[0] == ".setup":
+        setup = controller.getSetup(message.author.id)
+        if setup == "noentries":
+            await message.channel.send(f"No setup information has been set")
+        else:
+            response = f"{message.author.name}'s setup:\n"
+            for type in setup.keys():
+                response += f"{type}: {setup[type]}\n"
+
+            await message.channel.send(response)
+
+    if messageParts[0] == ".updatesetup":
+        if len(messageParts) > 2:
+            response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+        else:
+            response = "Incorrect number of arguments! Use .help updatesetup for more information."
+
+        await message.channel.send(response)
+
     if messageParts[0] == ".leaderboard":
         if len(messageParts) == 2:
             response = controller.getLeaderboard(messageParts[1])
 
-        elif len(messageParts) == 3:
+        elif len(messageParts) >= 3:
             response = controller.getLeaderboard(messageParts[1], messageParts[2])
         else:
             response = "No category supplied"
@@ -141,9 +131,11 @@ async def on_message(message):
         response = controller.getRunsDisplay(message.author.id)
         await message.channel.send(response)
 
+    """
     if messageParts[0] == ".edit":
         if len(messageParts) != 3:
             response = "Invalid arguments. Do .help edit to see"
+            """
 
 
     if messageParts[0] == ".ilsubmit":
@@ -158,7 +150,7 @@ async def on_message(message):
                     if message.attachments[0].filename.split(".")[-1] == "dem":
                         response = await controller.submitIL(messageParts[1], message.attachments[0], date, message.author.id)
                     else:
-                        respone = "File attached is not demo!"
+                        response = "File attached is not demo!"
 
                 else:
                     response = "No demo supplied!"
@@ -172,6 +164,70 @@ async def on_message(message):
 
         await message.channel.send(response)
 
+
+    if messageParts[0] == ".ilsubmitmany":
+        if controller.playerRegistered(message.author.id):
+            if len(message.attachments) > 0:
+                
+
+                if message.attachments[0].filename.split(".")[-1] == "zip":
+                    response = await controller.submitManyIL(message.attachments[0], message.author.id)
+                else:
+                    response = "File attached is not zip archive!"
+
+            else:
+                response = "No file supplied!"
+
+        else:
+            response = "Account not registered!\n Please register with .register first."
+                    
+
+        await message.channel.send(response)
+
+
+
+
+    ###############################
+    # Trusted-only Commands Below #
+    ###############################
+    
+    if messageParts[0] == ".submit":
+        if message.guild.id == 1081155162065862697:
+            if "Trusted" in [role.name for role in message.author.roles]:
+                args = len(messageParts)-1
+                if args < 2:
+                    await message.channel.send("Invalid submission! use `.help submit` for help on submitting.")
+                elif messageParts[1] not in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+                    await message.channel.send("Invalid category! use `.help submit` for a list of valid categories.")
+                elif not durations.seconds(messageParts[2]): # Should maybe be handled in controller.py?
+                    await message.channel.send("Invalid run duration!")
+
+                else:
+                    forcePB = False
+                    date = "now"
+                    srcomID = None
+                    for argument in messageParts[3:]:
+
+                        argParts = argument.split("=")
+                        if argParts[0] == "date":
+                            date = argParts[1]
+                        if argParts[0] == "srcomid":
+                            srcomID = argParts[1]
+
+                    output = controller.addRun(
+                        message.author.id, 
+                        messageParts[1], 
+                        messageParts[2], 
+                        date = date, 
+                        srcomID = srcomID
+                        )
+                    await message.channel.send(output)
+
+            else:
+                await message.channel.send("Run submission is restricted to trusted users!")
+
+        else:
+            await message.channel.send("Run submission is only available on the official TOL server!")
     #################################
     # Administrative Commands Below #
     #################################

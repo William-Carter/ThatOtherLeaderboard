@@ -65,6 +65,14 @@ CREATE TABLE "ilRuns" (
 )
 """)
 
-
+cur.execute("""
+CREATE TABLE "setupElements" (
+	"tolAccountID"	INTEGER,
+	"element"	TEXT,
+	"value"	TEXT,
+	FOREIGN KEY("tolAccountID") REFERENCES "tolAccounts"("ID"),
+	PRIMARY KEY("tolAccountID","element")
+)
+""")
 
 conn.commit()
