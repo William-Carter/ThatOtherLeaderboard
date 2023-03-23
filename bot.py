@@ -68,7 +68,7 @@ async def on_message(message):
         if len(messageParts) == 1:
             response = f"Profile for {message.author.name}:\n"
             if not controller.playerRegistered(message.author.id):
-                await message.channel.send("Account not registered!\n Please register with .register first.")
+                await message.channel.send("Account not registered!\nPlease register with .register first.")
                 personalBests = False
             else:
                 personalBests = controller.getProfileFromDiscord(message.author.id)
@@ -97,23 +97,29 @@ async def on_message(message):
 
 
     if messageParts[0] == ".setup":
-        setup = controller.getSetup(message.author.id)
-        if setup == "noentries":
-            await message.channel.send(f"No setup information has been set")
+        if not controller.playerRegistered(message.author.id):
+                await message.channel.send("Account not registered!\nPlease register with .register first.")
         else:
-            response = f"{message.author.name}'s setup:\n"
-            for type in setup.keys():
-                response += f"{type}: {setup[type]}\n"
+            setup = controller.getSetup(message.author.id)
+            if setup == "noentries":
+                await message.channel.send(f"No setup information has been set")
+            else:   
+                response = f"{message.author.name}'s setup:\n"
+                for type in setup.keys():
+                    response += f"{type}: {setup[type]}\n"
 
-            await message.channel.send(response)
+                await message.channel.send(response)
 
     if messageParts[0] == ".updatesetup":
-        if len(messageParts) > 2:
-            response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+        if not controller.playerRegistered(message.author.id):
+                await message.channel.send("Account not registered!\nPlease register with .register first.")
         else:
-            response = "Incorrect number of arguments! Use .help updatesetup for more information."
+            if len(messageParts) > 2:
+                response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+            else:
+                response = "Incorrect number of arguments! Use .help updatesetup for more information."
 
-        await message.channel.send(response)
+            await message.channel.send(response)
 
     if messageParts[0] == ".leaderboard":
         if len(messageParts) == 2:
