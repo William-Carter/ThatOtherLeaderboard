@@ -1,9 +1,14 @@
 import sheetsAuth
 import json
 import os
+import time
+import asyncio
 dirPath = os.path.dirname(os.path.realpath(__file__))
 with open(dirPath+"/config.json") as f:
-    sheetID = json.load(f)["leaderboardSheet"]
+    e = json.load(f)
+    sheetID = e["leaderboardSheet"]
+    ILID = e["ILBoardSheet"]
+
 def writeLeaderboard(sheetName: str, values: list):
     spreadsheet_id = sheetID
     rows = len(values)
@@ -18,3 +23,28 @@ def writeLeaderboard(sheetName: str, values: list):
     print('{0} cells updated.'.format(result.get('updatedCells')))
 
 
+def writeIlBoard(sheetName: str, category: str, values: list):
+    ranges = {"glitchless": "!B4:C",
+              "inbounds": "!F4:G",
+              "oob": "!J4:K"}
+    spreadsheet_id = ILID
+    rows = len(values)
+    range_name = sheetName+ranges[category]+str(rows+4)
+    value_input_option = 'USER_ENTERED'
+    body = {
+        'values': values
+    }
+    while 1:
+        try:
+            result = sheetsAuth.spreadsheet_service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id, range=range_name,
+            valueInputOption=value_input_option, body=body).execute()
+            time.sleep(0.5)
+        except:
+            print('rate limited, waiting 60s')
+            asyncio.sleep(60)
+
+        else:
+            break
+
+    print('{0} cells updated.'.format(result.get('updatedCells')))

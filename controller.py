@@ -6,16 +6,43 @@ import sheetsInterface
 import os
 import zipfile
 import untitledParserParser
+import time
+import regex as re
+import shutil
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
 
-    
+levelNames = {
+        "testchmb_a_00": "00/01",
+        "testchmb_a_01": "02/03",
+        "testchmb_a_02": "04/05",
+        "testchmb_a_03": "06/07",
+        "testchmb_a_04": "08",
+        "testchmb_a_05": "09",
+        "testchmb_a_06": "10",
+        "testchmb_a_07": "11/12",
+        "testchmb_a_08": "13",
+        "testchmb_a_09": "14",
+        "testchmb_a_10": "15",
+        "testchmb_a_11": "16",
+        "testchmb_a_13": "17",
+        "testchmb_a_14": "18",
+        "testchmb_a_15": "19",
+        "escape_00": "e00",
+        "escape_01": "e01",
+        "escape_02": "e02",
+        "testchmb_a_08_advanced": "a13",
+        "testchmb_a_09_advanced": "a14",
+        "testchmb_a_10_advanced": "a15",
+        "testchmb_a_11_advanced": "a16",
+        "testchmb_a_13_advanced": "a17",
+        "testchmb_a_14_advanced": "a18"
+    }
 
 
 def correctToTick(time: float) -> float:
     timeDiv = round(round((time/0.015), 0)*0.015, 3)
     return timeDiv
-
 
 
 def registerPlayer(discordName: str, discordID: str, srcomName: str) -> str:
@@ -50,8 +77,8 @@ def registerPlayer(discordName: str, discordID: str, srcomName: str) -> str:
             dbManager.insertSrcomAccount(srcomID, srcomName)
             dbManager.insertTolAccount(srcomName, discordID, srcomID)
             return f"{discordName} has been added as a new entry."
-        
-        
+
+
 def addRun(discordID: str, category: str, time: str, date: str="now", srcomID: str = None, forcePB: bool = False) -> str:
     dateFormat = "%Y-%m-%d"
     playerID = dbManager.getTolAccountID(discordID=discordID)
@@ -91,6 +118,7 @@ def getProfileFromDiscord(discordID: str):
         return False
     return getProfile(tolID)
 
+
 def getProfileFromDiscordName(discordName: str):
     tolID = dbManager.getTolIDFromName(discordName)
     if not tolID:
@@ -118,12 +146,17 @@ def playerRegistered(discordID):
         return True
     else:
         return False
-    
+
 
 def updateLeaderboard(categories=["oob", "inbounds", "unrestricted", "legacy", "glitchless"]):
     for category in categories:
         sheetsInterface.writeLeaderboard(category, dbManager.generateLeaderboard(category))
 
+def updateILBoard(levels = levelNames.keys(),
+                  categories = ["oob", "inbounds", "glitchless"]):
+    for level in levels:
+        for category in categories:
+            sheetsInterface.writeIlBoard(levelNames[level], category, dbManager.generateILBoard(level, category))
 
 
 def formatLeaderBoardPosition(position: int):
@@ -159,7 +192,7 @@ def getLeaderboard(category, start=1):
         place = str(i+start+1)
         name = leaderboard[i][0]
         time = leaderboard[i][1]
-        time = time+('0'*(3-len(time.split(".")[1])))
+        time = time+('0'*(3-len(time.split(".")[1]))) # Add trailing 0s
         response += f"`{' '*(2-len(place))}{place}. {name}{' '*(maxNameLength-len(name)+1)} {time}{' '*(9-len(time))}`\n"
     
     return response
@@ -200,37 +233,21 @@ async def submitIL(category, attachment, date, senderID):
     tolID = dbManager.getTolAccountID(discordID=senderID)
     level = demo.map
     time = demo.time
+    if demo.map == "testchmb_a_00" and not demo.specialTimingPoint:
+        time += 53.025
 
     ilID = dbManager.insertIL(level, category, time, date, tolID)
     folderPath = dirPath+"/demos/ILs/"+str(ilID)
     os.mkdir(folderPath)
     os.rename(demoPath, folderPath+"/"+str(ilID)+".dem")
 
-    levelNames = {
-        "testchmb_a_00": "00/01",
-        "testchmb_a_01": "02/03",
-        "testchmb_a_02": "04/05",
-        "testchmb_a_03": "06/07",
-        "testchmb_a_04": "08",
-        "testchmb_a_05": "09",
-        "testchmb_a_06": "10",
-        "testchmb_a_07": "11/12",
-        "testchmb_a_08": "13",
-        "testchmb_a_09": "14",
-        "testchmb_a_10": "15",
-        "testchmb_a_11": "16",
-        "testchmb_a_13": "17",
-        "testchmb_a_14": "18",
-        "testchmb_a_15": "19",
-        "escape_00": "e00",
-        "escape_01": "e01",
-        "escape_02": "e02"
-    }
+    updateILBoard(levels=[level], categories=[category])
     
     return f"Successfully submitted a time of {durations.formatted(time)} to {levelNames[level]} {category}"
 
 
 async def submitManyIL(attachment, discordID):
+    tolAccount = dbManager.getTolAccountID(discordID=discordID)
     demoPath = dirPath+"/demos/temp/"+str(attachment.id)
     with open(demoPath+".zip", "wb") as f:
         demoBytes = await attachment.read()
@@ -239,10 +256,62 @@ async def submitManyIL(attachment, discordID):
     with zipfile.ZipFile(demoPath+".zip", 'r') as zip_ref:
         zip_ref.extractall(demoPath+"/")
 
+    workingPath = demoPath+"/"
+
+    extractedFiles = os.listdir(workingPath)
+    
+
+    # You often end up with a folder containing the zipped files inside the zip, so we'll work in that folder if it exists
+    if len(extractedFiles) == 1:
+        if extractedFiles[0].split(".")[-1] != "dem":
+            workingPath += extractedFiles[0]+"/"
+            extractedFiles = os.listdir(workingPath)
+
+
+    demoStatuses = {}
+
+    for file in extractedFiles:
+        if file.split(".")[-1] == "dem":
+            date = time.gmtime(os.path.getmtime(workingPath+file))
+            date_formatted = f"{date[0]}-{date[1]}-{date[2]}"
+            demo = untitledParserParser.DemoParse(workingPath+file)
+            category = determineDemoCategory(file)  
+            if not category:
+                demoStatuses[file] = "No category detected"
+                continue
+
+            level = demo.map
+            adjustedtime = demo.time
+            if demo.map == "testchmb_a_00" and not demo.specialTimingPoint:
+                adjustedtime += 53.025
+
+            ilID = dbManager.insertIL(level, category, adjustedtime, date_formatted, tolAccount)
+            folderPath = dirPath+"/demos/ILs/"+str(ilID)
+            os.mkdir(folderPath)
+            os.rename(workingPath+file, folderPath+"/"+str(ilID)+".dem")
+            demoStatuses[file] = f"Submitted {levelNames[demo.map]} {category}, {adjustedtime}"
     
     
+
     
+            
+            
+
+
+        else:
+            demoStatuses[file] = "File not demo!"
+
+        
+    shutil.rmtree(demoPath)
     
+    output = "Results:\n"
+    for file in demoStatuses.keys():
+        output += f"`{file}: {demoStatuses[file]}`\n"
+
+
+    return output
+    
+
 def getSetup(discordID):
     tolID = dbManager.getTolAccountID(discordID=discordID)
     setup = dbManager.getSetupFromTolID(tolID)
@@ -266,6 +335,7 @@ def getSetup(discordID):
     
     
     return setupDict
+
 
 def updateSetup(discordID: str, element: str, value: str):
     element = element.lower()
@@ -305,3 +375,68 @@ def updateSetup(discordID: str, element: str, value: str):
     tolID = dbManager.getTolAccountID(discordID=discordID)
     dbManager.insertOrUpdateSetupElement(tolID, element, value)
     return "Setup successfully updated."
+
+
+def determineDemoCategory(filename:str) -> str:
+    patterns = {
+        "oob":          r"(?<![bn])o",
+        "inbounds":     r"(?<!l)i|no?sla",
+        "glitchless":   r"g"
+    }
+
+    for category in patterns.keys():
+        if bool(re.search(patterns[category], filename)):
+            return category
+        
+    return None
+
+
+def pullDemo(id):
+    demoPath = dirPath+f"/demos/ILs/{id}/{id}.dem"
+    demoParse = untitledParserParser.DemoParse(demoPath)
+    tolID = dbManager.getTolIDFromILID(id)
+    if not tolID:
+        return False
+    player = dbManager.getNameFromTolID(tolID)
+    category = dbManager.getCategoryFromILID(id)
+    return {"path": demoPath, "name": player, "category": category, "time": durations.formatted(demoParse.time), "level": levelNames[demoParse.map]}
+
+
+def getILBoard(level, category, start=1):
+    if not level in levelNames.keys():
+        if not level in levelNames.values():
+            return "Invalid level!"
+
+        else:
+            level = list(levelNames.keys())[list(levelNames.values()).index(level)]
+
+        
+
+    
+    if not category in ["oob", "inbounds", "glitchless"]:
+        return "Invalid category!"
+    
+    
+    try:
+        start= int(start)-1
+    except:
+        return "Invalid starting position!"
+
+    leaderboard = dbManager.generateILBoard(level, category)[start:]
+    if len(leaderboard) < 1:
+        return "No runs found!"
+    response = f"`Leaderboard for {levelNames[level]} {category}:`\n"
+    maxNameLength = max([len(x[0]) for x in leaderboard[:20]])
+    for i in range(min(len(leaderboard), 20)):
+        place = str(i+start+1)
+        name = leaderboard[i][0]
+        time = leaderboard[i][1]
+        time = time+('0'*(3-len(time.split(".")[1]))) # Add trailing 0s
+        response += f"`{' '*(2-len(place))}{place}. {name}{' '*(maxNameLength-len(name)+1)} {time}{' '*(9-len(time))}`\n"
+    
+    return response
+
+
+def getILPBs(discordID):
+    tolAccount = dbManager.getTolAccountID(discordID=discordID)
+    

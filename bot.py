@@ -97,23 +97,29 @@ async def on_message(message):
 
 
     if messageParts[0] == ".setup":
-        setup = controller.getSetup(message.author.id)
-        if setup == "noentries":
-            await message.channel.send(f"No setup information has been set")
+        if not controller.playerRegistered(message.author.id):
+                await message.channel.send("Account not registered!\nPlease register with .register first.")
         else:
-            response = f"{message.author.name}'s setup:\n"
-            for type in setup.keys():
-                response += f"{type}: {setup[type]}\n"
+            setup = controller.getSetup(message.author.id)
+            if setup == "noentries":
+                await message.channel.send(f"No setup information has been set")
+            else:   
+                response = f"{message.author.name}'s setup:\n"
+                for type in setup.keys():
+                    response += f"{type}: {setup[type]}\n"
 
-            await message.channel.send(response)
+                await message.channel.send(response)
 
     if messageParts[0] == ".updatesetup":
-        if len(messageParts) > 2:
-            response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+        if not controller.playerRegistered(message.author.id):
+                await message.channel.send("Account not registered!\nPlease register with .register first.")
         else:
-            response = "Incorrect number of arguments! Use .help updatesetup for more information."
+            if len(messageParts) > 2:
+                response = controller.updateSetup(message.author.id, messageParts[1], " ".join(messageParts[2:]))
+            else:
+                response = "Incorrect number of arguments! Use .help updatesetup for more information."
 
-        await message.channel.send(response)
+            await message.channel.send(response)
 
     if messageParts[0] == ".leaderboard":
         if len(messageParts) == 2:
@@ -131,11 +137,16 @@ async def on_message(message):
         response = controller.getRunsDisplay(message.author.id)
         await message.channel.send(response)
 
-    """
-    if messageParts[0] == ".edit":
-        if len(messageParts) != 3:
-            response = "Invalid arguments. Do .help edit to see"
-            """
+    if messageParts[0] == ".ilboard":
+        if len(messageParts) == 3:
+            response = controller.getILBoard(level=messageParts[1], category=messageParts[2])
+
+        elif len(messageParts) >= 3:
+            response = controller.getLeaderboard(level=messageParts[1], category=messageParts[2], start=messageParts[3])
+        else:
+            response = "Insufficient arguments"
+
+        await message.channel.send(response)
 
 
     if messageParts[0] == ".ilsubmit":
@@ -159,7 +170,7 @@ async def on_message(message):
                 response = "No category supplied!"
 
         else:
-            response = "Account not registered!\n Please register with .register first."
+            response = "Account not registered!\nPlease register with .register first."
                     
 
         await message.channel.send(response)
@@ -179,17 +190,35 @@ async def on_message(message):
                 response = "No file supplied!"
 
         else:
-            response = "Account not registered!\n Please register with .register first."
+            response = "Account not registered!\nPlease register with .register first."
                     
 
         await message.channel.send(response)
 
 
+    if messageParts[0].lower() == ".pullil":
+        if len(messageParts) > 1:
+            output = controller.pullDemo(messageParts[1])
+            if not output:
+                await message.channel.send("ID Invalid")
+            else:
+                file = discord.File(output["path"])
+                await message.channel.send(file=file, content=f"Found {output['time']} run of {output['level']} {output['category']} by {output['name']}")
+                
+                
+        else:
+            await message.channel.send("No ID provided")
 
+
+    if messageParts[0] == ".ilpbs":
+        response = controller.getIlPBs(message.author.id)
+            
+
+    
 
     ###############################
     # Trusted-only Commands Below #
-    ###############################
+    ###############################file = discord.File(output["demopath"])
     
     if messageParts[0] == ".submit":
         if message.guild.id == 1081155162065862697:
@@ -233,7 +262,10 @@ async def on_message(message):
     #################################
     if message.author.id in trustedUsers:
         if messageParts[0] == ".update":
-                controller.updateLeaderboard()
+            controller.updateLeaderboard()
+        
+        if messageParts[0] == ".updateils":
+            controller.updateILBoard()
 
                 
 

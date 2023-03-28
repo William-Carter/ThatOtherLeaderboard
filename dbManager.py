@@ -220,6 +220,29 @@ def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True):
     return runs
 
 
+def getTolIDFromILID(ILID: int):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT tolAccount FROM ilRuns WHERE ID = ?", (ILID,))
+    result = cur.fetchall()
+    conn.commit()
+    if len(result) >= 1:
+        return result[0][0]
+    else:
+        return False
+    
+def getNameFromTolID(tolID: int):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM tolAccounts WHERE ID = ?", (tolID,))
+    result = cur.fetchall()
+    conn.commit()
+    if len(result) >= 1:
+        return result[0][0]
+    else:
+        return False
+
+
     
 def addDiscordToPlayer(discordID, srcomID):
     conn = sqlite3.connect(dirPath+"/tol.db")
@@ -359,6 +382,17 @@ def getCategoryFromRunID(runID):
     else:
         return False
     
+def getCategoryFromILID(ILID):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT category FROM ilRuns WHERE ID = ?", (ILID,))
+    results = cur.fetchall()
+    conn.close()
+    if len(results) > 0:
+        return results[0][0]
+    else:
+        return False
+    
 def addSrcomIDToRun(runID, srcomID):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
@@ -371,7 +405,72 @@ def getSetupFromTolID(tolID):
     cur = conn.cursor()
     cur.execute("SELECT element, value FROM setupElements WHERE tolAccountID = ?", (tolID,))
     results = cur.fetchall()
+    conn.close()
     if len(results) > 0:
         return results
     else:
         return False
+    
+
+
+def generateILBoard(level, category):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT hierarchy
+    FROM categoryHierarchy
+    WHERE categoryName = ?
+    """, (category,))
+    categoryHierarchy = cur.fetchone()[0]
+    cur.execute(
+        """
+        SELECT tolAccounts.name, MIN(ilRuns.time), ilRuns.ID
+        FROM ilRuns
+        LEFT JOIN tolAccounts ON ilRuns.tolAccount = tolAccounts.ID
+        LEFT JOIN categoryHierarchy ON ilRuns.category = categoryHierarchy.categoryName
+        WHERE categoryHierarchy.hierarchy >= ?
+        AND level = ?
+        GROUP BY tolAccounts.ID
+
+        ORDER BY ilRuns.time
+        """, (categoryHierarchy, level))
+    
+    result = cur.fetchall()
+    print(result)
+    conn.close()
+    output = {}
+    for run in result:
+        time = run[1]
+        name = run[0]
+        if name in output.keys():
+            if time < output[name]["t"]:
+                output[name] = {"t": time, "id": run[2]}
+        else:
+            output[name] = {"t": time, "id": run[2]}
+
+    with open(dirPath+"/leaderboardReferences/"+level+"_"+category+".csv", "w", newline="") as f:
+        c = csv.writer(f)
+        for runner in output.keys():
+            c.writerow([output[runner]["id"]])
+
+    with open(dirPath+"/fuck.json", "w") as f:
+        json.dump(output, f)
+
+    
+    actualOutput = []
+    for runner in output.keys():
+        actualOutput.append([runner, durations.formatted(output[runner]["t"])])
+    
+    return actualOutput
+
+
+def getRunnerILPBs(tolAccount):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT ID, MIN(time)
+    FROM ilRuns
+    WHERE tolAccount = ?
+    GROUP BY level, category
+    """, (tolAccount,))
+    result = cur.fetchall()
