@@ -1,7 +1,7 @@
 import sheetsAuth
 import json
 import os
-import time
+import timez
 import asyncio
 dirPath = os.path.dirname(os.path.realpath(__file__))
 with open(dirPath+"/config.json") as f:

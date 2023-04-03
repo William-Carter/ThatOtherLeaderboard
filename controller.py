@@ -164,7 +164,11 @@ async def updateILBoard(levels = levelNames.keys(),
             sheetsInterface.writeIlBoard(levelNames[level], category, leaderboard)
             await asyncio.sleep(1)
 
-
+def updateILBoardLight(levels = levelNames.keys(),
+                  categories = ["oob", "inbounds", "glitchless"]):
+    for level in levels:
+        for category in categories:
+            dbManager.generateILBoard(level, category)
 def formatLeaderBoardPosition(position: int):
     suffix = "th"
     cases = {"1": "st",
@@ -446,19 +450,23 @@ def getILBoard(level, category, start=1):
 
 
 def getILPBs(discordID):
-    forCats = {"oob": "Out of Bounds", "inbounds": "Inbounds", "glitchless": "Glitchless"}
+    forCats = ["glitchless", "inbounds", "oob"]
     tolAccount = dbManager.getTolAccountID(discordID=discordID)
     pbs = dbManager.getRunnerILPBs(tolAccount)
     tableData = [["Level", "Glitchless", "Inbounds", "Out of Bounds"]]
     for level in levelNames.keys():
         row = [levelNames[level]]
-        for category in ["glitchless", "inbounds", "oob"]:
+        for category in  forCats:
             relevantPB = ""
+            fastestValidRun = []
             for pb in pbs:
-                if pb[1] == level and pb[2] == category:
-                    place = dbManager.fetchILPlace(pb[0])
-                    pbTime = pb[3]
-                    relevantPB = f"{durations.formatted(pbTime)}, {formatLeaderBoardPosition(place)}"
+                if pb[1] == level and forCats.index(pb[2]) <= forCats.index(category):
+                    fastestValidRun = pb
+            if len(fastestValidRun) != 0:
+                place = dbManager.fetchILPlace(fastestValidRun[0])
+                pbTime = fastestValidRun[3]
+                relevantPB = f"{durations.formatted(pbTime)}, {formatLeaderBoardPosition(place)}"
+                        
 
             row.append(relevantPB)
 

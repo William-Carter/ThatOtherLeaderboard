@@ -311,6 +311,10 @@ async def on_message(message):
         if messageParts[0] == ".updateils":
             await controller.updateILBoard()
 
+        if messageParts[0] == ".updateilslight":
+            controller.updateILBoardLight()
+
+
                 
 
 
