@@ -251,7 +251,7 @@ async def submitIL(category, attachment, date, senderID):
     os.mkdir(folderPath)
     os.rename(demoPath, folderPath+"/"+str(ilID)+".dem")
 
-    updateILBoard(levels=[level], categories=[category])
+    updateILBoardLight()
     
     return f"Successfully submitted a time of {durations.formatted(time)} to {levelNames[level]} {category}"
 
@@ -319,6 +319,7 @@ async def submitManyIL(attachment, discordID):
         output += f"`{file}: {demoStatuses[file]}`\n"
 
 
+    updateILBoardLight()
     return output
     
 
@@ -390,7 +391,7 @@ def updateSetup(discordID: str, element: str, value: str):
 def determineDemoCategory(filename:str) -> str:
     patterns = {
         "oob":          r"(?<![bn])o",
-        "inbounds":     r"(?<!l)i|no?sla",
+        "inbounds":     r"(?<!l)i(?!l)|no?sla",
         "glitchless":   r"g"
     }
 
