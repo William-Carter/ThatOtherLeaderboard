@@ -9,6 +9,8 @@ import untitledParserParser
 import time
 import regex as re
 import shutil
+import neatTables
+import asyncio
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -38,6 +40,8 @@ levelNames = {
         "testchmb_a_13_advanced": "a17",
         "testchmb_a_14_advanced": "a18"
     }
+
+categories = ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]
 
 
 def correctToTick(time: float) -> float:
@@ -152,11 +156,13 @@ def updateLeaderboard(categories=["oob", "inbounds", "unrestricted", "legacy", "
     for category in categories:
         sheetsInterface.writeLeaderboard(category, dbManager.generateLeaderboard(category))
 
-def updateILBoard(levels = levelNames.keys(),
+async def updateILBoard(levels = levelNames.keys(),
                   categories = ["oob", "inbounds", "glitchless"]):
     for level in levels:
         for category in categories:
-            sheetsInterface.writeIlBoard(levelNames[level], category, dbManager.generateILBoard(level, category))
+            leaderboard = [[x[1], x[2]] for x in dbManager.generateILBoard(level, category)]
+            sheetsInterface.writeIlBoard(levelNames[level], category, leaderboard)
+            await asyncio.sleep(1)
 
 
 def formatLeaderBoardPosition(position: int):
@@ -426,17 +432,113 @@ def getILBoard(level, category, start=1):
     if len(leaderboard) < 1:
         return "No runs found!"
     response = f"`Leaderboard for {levelNames[level]} {category}:`\n"
-    maxNameLength = max([len(x[0]) for x in leaderboard[:20]])
+    maxNameLength = max([len(x[1]) for x in leaderboard[:20]])
     for i in range(min(len(leaderboard), 20)):
-        place = str(i+start+1)
-        name = leaderboard[i][0]
-        time = leaderboard[i][1]
+        place = str(dbManager.fetchILPlace(leaderboard[i][0]))
+        name = leaderboard[i][1]
+        time = leaderboard[i][2]
         time = time+('0'*(3-len(time.split(".")[1]))) # Add trailing 0s
         response += f"`{' '*(2-len(place))}{place}. {name}{' '*(maxNameLength-len(name)+1)} {time}{' '*(9-len(time))}`\n"
     
     return response
 
 
+
+
 def getILPBs(discordID):
+    forCats = {"oob": "Out of Bounds", "inbounds": "Inbounds", "glitchless": "Glitchless"}
     tolAccount = dbManager.getTolAccountID(discordID=discordID)
+    pbs = dbManager.getRunnerILPBs(tolAccount)
+    tableData = [["Level", "Glitchless", "Inbounds", "Out of Bounds"]]
+    for level in levelNames.keys():
+        row = [levelNames[level]]
+        for category in ["glitchless", "inbounds", "oob"]:
+            relevantPB = ""
+            for pb in pbs:
+                if pb[1] == level and pb[2] == category:
+                    place = dbManager.fetchILPlace(pb[0])
+                    pbTime = pb[3]
+                    relevantPB = f"{durations.formatted(pbTime)}, {formatLeaderBoardPosition(place)}"
+
+            row.append(relevantPB)
+
+        tableData.append(row)
+
+    table = neatTables.generateTable(tableData)
+    table = "```\n"+table+"```"
+    return table
+                
+
+
+def getRunnerSOILs(tolID: int) -> dict:
+    """
+    Gets a given runner's Sums of ILs (2 for each category, 1 with advanced maps and 1 without)
     
+    Arguments:
+        tolID - That other leaderboard account ID
+
+    Returns:
+        soils - A dictionary containing all the sums of ils
+            Uses standard category names for soils without advanced, uses 'catnameAdv' for soils including them.    
+    """
+    soils = {"glitchless": 0,
+             "glitchlessAdv": 0,
+             "inbounds": 0,
+             "inboundsAdv": 0,
+             "oob": 0,
+             "oobAdv": 0}
+    
+    pbs = dbManager.getRunnerILPBs(tolID)
+    
+
+    for pb in pbs:
+        soils[pb[2]+"Adv"] += pb[3]
+        if not "advanced" in pb[1]:
+            soils[pb[2]] += pb[3]
+
+
+    return soils
+
+
+def getSoilsDisplay(discordID):
+    tableRows = {"glitchless": "Glitchless Std.",
+             "glitchlessAdv": "Glitchless Full",
+             "inbounds": "Inbounds Std.",
+             "inboundsAdv": "Inbounds Full",
+             "oob": "Out of Bounds Std.",
+             "oobAdv": "Out of Bounds Full"}
+    tolAccount = dbManager.getTolAccountID(discordID=discordID)
+    soils = getRunnerSOILs(tolAccount)
+    tableData = [["Category", "Sum"]]
+    for soil in soils.keys():
+        tableData.append([tableRows[soil], durations.formatted(soils[soil])])
+
+    table = neatTables.generateTable(tableData)
+    table = "```\n"+table+"```"
+    return table
+
+def collectILDemo(discordID, level, category):
+    if not (level in levelNames.keys() or level in levelNames.values()  ):
+        return "?Level invalid"
+    if not category in ["glitchless", "inbounds", "oob"]:
+        return "?Category invalid"
+    tolAccount = dbManager.getTolAccountID(discordID=discordID)
+    pbs = dbManager.getRunnerILPBs(tolAccount)
+    pbID = -1
+    for pb in pbs:
+        if (pb[1] == level or pb[1] == getMapFromLevelName(level)) and pb[2] == category:
+            pbID = pb[0]
+
+    if pbID >= 0:
+        return pullDemo(pbID)
+        
+    else:
+        return "?User has no PB for this category!"
+
+def getMapFromLevelName(levelName: str):
+    if not levelName in levelNames.values():
+        return False
+
+    else:
+        return list(levelNames.keys())[list(levelNames.values()).index(levelName)]
+

@@ -196,7 +196,7 @@ async def on_message(message):
         await message.channel.send(response)
 
 
-    if messageParts[0].lower() == ".pullil":
+    if messageParts[0].lower() == ".pullilid":
         if len(messageParts) > 1:
             output = controller.pullDemo(messageParts[1])
             if not output:
@@ -211,14 +211,42 @@ async def on_message(message):
 
 
     if messageParts[0] == ".ilpbs":
-        response = controller.getIlPBs(message.author.id)
+        if controller.playerRegistered(message.author.id):
+            response = controller.getILPBs(message.author.id)
+        else:
+            response = "Account not registered!\nPlease register with .register first."
+        await message.channel.send(response)
             
+    if messageParts[0] == ".soils":
+        if controller.playerRegistered(message.author.id):
+            response = controller.getSoilsDisplay(message.author.id)
+        else:
+            response = "Account not registered!\nPlease register with .register first."
+        await message.channel.send(response)
 
-    
+
+    if messageParts[0] == ".pullil":
+        if controller.playerRegistered(message.author.id):
+            if len(messageParts) >= 3:
+                output = controller.collectILDemo(message.author.id, messageParts[1], messageParts[2])
+                if output[0] == "?":
+                    await message.channel.send(output[1:])
+                else:
+                    file = discord.File(output["path"])
+                    await message.channel.send(file=file, content=f"Found {output['time']} run of {output['level']} {output['category']} by {output['name']}")
+
+            else:
+                await message.channel.send("Not enough arguments!")
+
+        else:
+            response = "Account not registered!\nPlease register with .register first."
+            await message.channel.send(response)
+
+        
 
     ###############################
     # Trusted-only Commands Below #
-    ###############################file = discord.File(output["demopath"])
+    ###############################
     
     if messageParts[0] == ".submit":
         if message.guild.id == 1081155162065862697:
@@ -257,7 +285,7 @@ async def on_message(message):
 
         else:
             await message.channel.send("Run submission is only available on the official TOL server!")
-    #################################
+    #################################   
     # Administrative Commands Below #
     #################################
     if message.author.id in trustedUsers:
@@ -265,7 +293,7 @@ async def on_message(message):
             controller.updateLeaderboard()
         
         if messageParts[0] == ".updateils":
-            controller.updateILBoard()
+            await controller.updateILBoard()
 
                 
 

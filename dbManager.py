@@ -39,14 +39,6 @@ def insertTolAccount(name: str, discordID: str = None, srcomID: str = None):
     
 
 
-
-
-    cur.execute("""
-    INSERT INTO setupProfiles (tolAccountID)
-    VALUES (?)
-    """, (cur.lastrowid,)
-    )
-
     conn.commit()
 
 
@@ -358,6 +350,21 @@ def fetchLeaderboardPlace(runID, category=None):
         return runs.index(str(runID))+1
     else:
         return False
+    
+def fetchILPlace(runID):
+    level = getLevelFromILID(runID)
+    if not level:
+        return False
+    category = getCategoryFromILID(runID)
+    if not category:
+        return False
+    with open(dirPath+"/leaderboardReferences/"+level+"_"+category+".json", "r") as f:
+        reference = json.load(f)
+
+    if str(runID) in reference.keys():
+        return reference[str(runID)]
+    else:
+        return False
 
             
 
@@ -386,6 +393,17 @@ def getCategoryFromILID(ILID):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     cur.execute("SELECT category FROM ilRuns WHERE ID = ?", (ILID,))
+    results = cur.fetchall()
+    conn.close()
+    if len(results) > 0:
+        return results[0][0]
+    else:
+        return False
+    
+def getLevelFromILID(ILID):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT level FROM ilRuns WHERE ID = ?", (ILID,))
     results = cur.fetchall()
     conn.close()
     if len(results) > 0:
@@ -448,18 +466,31 @@ def generateILBoard(level, category):
         else:
             output[name] = {"t": time, "id": run[2]}
 
+    """
     with open(dirPath+"/leaderboardReferences/"+level+"_"+category+".csv", "w", newline="") as f:
         c = csv.writer(f)
         for runner in output.keys():
             c.writerow([output[runner]["id"]])
+    """
 
-    with open(dirPath+"/fuck.json", "w") as f:
-        json.dump(output, f)
+    with open(dirPath+"/leaderboardReferences/"+level+"_"+category+".json", "w", newline="") as f:
+        placementDict = {}
+        currentTime = -1
+        placement = 0
+        for runner in output.keys():
+            if output[runner]["t"] > currentTime:
+                placement += 1
+            currentTime = output[runner]["t"]   
+            placementDict[output[runner]["id"]] = placement
+
+        json.dump(placementDict, f)
+
+        
 
     
     actualOutput = []
     for runner in output.keys():
-        actualOutput.append([runner, durations.formatted(output[runner]["t"])])
+        actualOutput.append([output[runner]["id"], runner, durations.formatted(output[runner]["t"])])
     
     return actualOutput
 
@@ -468,9 +499,11 @@ def getRunnerILPBs(tolAccount):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     cur.execute("""
-    SELECT ID, MIN(time)
+    SELECT ID, level, category, MIN(time)
     FROM ilRuns
     WHERE tolAccount = ?
     GROUP BY level, category
     """, (tolAccount,))
     result = cur.fetchall()
+    conn.close()
+    return result

@@ -34,17 +34,15 @@ def writeIlBoard(sheetName: str, category: str, values: list):
     body = {
         'values': values
     }
-    while 1:
-        try:
-            result = sheetsAuth.spreadsheet_service.spreadsheets().values().update(
-            spreadsheetId=spreadsheet_id, range=range_name,
-            valueInputOption=value_input_option, body=body).execute()
-            time.sleep(0.5)
-        except:
-            print('rate limited, waiting 60s')
-            asyncio.sleep(60)
-
-        else:
-            break
-
+    try:
+        result = sheetsAuth.spreadsheet_service.spreadsheets().values().update(
+        spreadsheetId=spreadsheet_id, range=range_name,
+        valueInputOption=value_input_option, body=body).execute()
+    except:
+        return "failed"
+    
     print('{0} cells updated.'.format(result.get('updatedCells')))
+    return "success"
+
+
+    
