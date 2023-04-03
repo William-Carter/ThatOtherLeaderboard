@@ -464,6 +464,8 @@ def getILPBs(discordID):
                     if len(fastestValidRun) != 0:
                         if pb[3] < fastestValidRun[3]:
                             fastestValidRun = pb
+                    else:
+                        fastestValidRun = pb
             if len(fastestValidRun) != 0:
                 place = dbManager.fetchILPlace(fastestValidRun[0])
                 pbTime = fastestValidRun[3]
