@@ -461,7 +461,8 @@ def getILPBs(discordID):
             fastestValidRun = []
             for pb in pbs:
                 if pb[1] == level and forCats.index(pb[2]) <= forCats.index(category):
-                    fastestValidRun = pb
+                    if pb[3] < fastestValidRun[3]:
+                     fastestValidRun = pb
             if len(fastestValidRun) != 0:
                 place = dbManager.fetchILPlace(fastestValidRun[0])
                 pbTime = fastestValidRun[3]
