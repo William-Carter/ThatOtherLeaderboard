@@ -150,50 +150,66 @@ async def on_message(message):
 
 
     if messageParts[0] == ".ilsubmit":
+        if message.guild.id == 1081155162065862697:
+            if "Trusted" in [role.name for role in message.author.roles]:
+                if controller.playerRegistered(message.author.id):
+                    if len(messageParts) > 1:
+                        if len(message.attachments) > 0:
+                            if len(messageParts) > 2:
+                                date = messageParts[2]
+                            else:
+                                date = "now"
+                            if message.attachments[0].filename.split(".")[-1] == "dem":
+                                response = await controller.submitIL(messageParts[1], message.attachments[0], date, message.author.id)
+                            else:
+                                response = "File attached is not demo!"
 
-        if controller.playerRegistered(message.author.id):
-            if len(messageParts) > 1:
-                if len(message.attachments) > 0:
-                    if len(messageParts) > 2:
-                        date = messageParts[2]
+                        else:
+                            response = "No demo supplied!"
+
                     else:
-                        date = "now"
-                    if message.attachments[0].filename.split(".")[-1] == "dem":
-                        response = await controller.submitIL(messageParts[1], message.attachments[0], date, message.author.id)
-                    else:
-                        response = "File attached is not demo!"
+                        response = "No category supplied!"
 
                 else:
-                    response = "No demo supplied!"
+                    response = "Account not registered!\nPlease register with .register first."
+                            
+
+                await message.channel.send(response)
 
             else:
-                response = "No category supplied!"
+                await message.channel.send("Run submission is restricted to trusted users!")
 
         else:
-            response = "Account not registered!\nPlease register with .register first."
-                    
-
-        await message.channel.send(response)
+            await message.channel.send("Run submission is only available on the official TOL server!")
 
 
     if messageParts[0] == ".ilsubmitmany":
-        if controller.playerRegistered(message.author.id):
-            if len(message.attachments) > 0:
-                
+        if message.guild.id == 1081155162065862697:
+            if "Trusted" in [role.name for role in message.author.roles]:
+                if controller.playerRegistered(message.author.id):
+                    if len(message.attachments) > 0:
+                        
 
-                if message.attachments[0].filename.split(".")[-1] == "zip":
-                    response = await controller.submitManyIL(message.attachments[0], message.author.id)
+                        if message.attachments[0].filename.split(".")[-1] == "zip":
+                            response = await controller.submitManyIL(message.attachments[0], message.author.id)
+                        else:
+                            response = "File attached is not zip archive!"
+
+                    else:
+                        response = "No file supplied!"
+
                 else:
-                    response = "File attached is not zip archive!"
+                    response = "Account not registered!\nPlease register with .register first."
+                            
+
+                await message.channel.send(response)
 
             else:
-                response = "No file supplied!"
+                        await message.channel.send("Run submission is restricted to trusted users!")
 
         else:
-            response = "Account not registered!\nPlease register with .register first."
-                    
-
-        await message.channel.send(response)
+                    await message.channel.send("Run submission is only available on the official TOL server!")
+        
 
 
     if messageParts[0].lower() == ".pullilid":
