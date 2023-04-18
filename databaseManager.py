@@ -6,6 +6,32 @@ import csv
 import json
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
+levelNames = {
+        "testchmb_a_00": "00/01",
+        "testchmb_a_01": "02/03",
+        "testchmb_a_02": "04/05",
+        "testchmb_a_03": "06/07",
+        "testchmb_a_04": "08",
+        "testchmb_a_05": "09",
+        "testchmb_a_06": "10",
+        "testchmb_a_07": "11/12",
+        "testchmb_a_08": "13",
+        "testchmb_a_09": "14",
+        "testchmb_a_10": "15",
+        "testchmb_a_11": "16",
+        "testchmb_a_13": "17",
+        "testchmb_a_14": "18",
+        "testchmb_a_15": "19",
+        "escape_00": "e00",
+        "escape_01": "e01",
+        "escape_02": "e02",
+        "testchmb_a_08_advanced": "a13",
+        "testchmb_a_09_advanced": "a14",
+        "testchmb_a_10_advanced": "a15",
+        "testchmb_a_11_advanced": "a16",
+        "testchmb_a_13_advanced": "a17",
+        "testchmb_a_14_advanced": "a18"
+    }
 
 def insertTolAccount(name: str, discordID: str = None, srcomID: str = None):
     conn = sqlite3.connect(dirPath+"/tol.db")
@@ -506,3 +532,11 @@ def getRunnerILPBs(tolAccount):
     result = cur.fetchall()
     conn.close()
     return result
+
+
+
+def updateILBoardLight(levels = levelNames.keys(),
+                  categories = ["oob", "inbounds", "glitchless"]):
+    for level in levels:
+        for category in categories:
+            generateILBoard(level, category)

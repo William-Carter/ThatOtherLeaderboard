@@ -18,7 +18,11 @@ tolBot.addCommand(customcommands.SubmitCommand(tolBot))
 tolBot.addCommand(customcommands.ProfileCommand(tolBot))
 tolBot.addCommand(customcommands.SetupCommand(tolBot))
 tolBot.addCommand(customcommands.UpdateSetupCommand(tolBot))
-
+tolBot.addCommand(customcommands.ILSubmitCommand(tolBot))
+tolBot.addCommand(customcommands.BatchSubmitCommand(tolBot))
+tolBot.addCommand(customcommands.ILBoardCommand(tolBot))
+tolBot.addCommand(customcommands.ILPBsCommand(tolBot))
+tolBot.addCommand(customcommands.SumOfILsCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -37,7 +41,7 @@ async def on_message(message):
     if message.content[0] == tolBot.prefix:
         permissionLevel = cobble.permissions.getUserPermissionLevel(message.author, tolBot.admins)
 
-        await message.channel.send(tolBot.processCommand(message, message.content[1:], permissionLevel))
+        await message.channel.send(await tolBot.processCommand(message, message.content[1:], permissionLevel))
 
 
 
