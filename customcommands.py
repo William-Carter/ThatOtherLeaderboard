@@ -198,6 +198,7 @@ class SubmitCommand(cobble.command.Command):
 
 
         dbm.insertRun(argumentValues["category"], time, argumentValues["date"], runnerID)
+        dbm.updateLeaderboardLight()
 
         return "Run submitted"
 

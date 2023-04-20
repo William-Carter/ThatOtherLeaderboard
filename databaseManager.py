@@ -131,7 +131,7 @@ def getSrcomIDFromSrcomName(srcomName: str):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
 
-    cur.execute("SELECT srcomID FROM players WHERE name = ?", (srcomName,))
+    cur.execute("SELECT ID FROM srcomAccounts WHERE name = ?", (srcomName,))
     result = cur.fetchall()
     count = len(result)
     # If we already have a runner in the database with that name, grab the srcom ID from the database
@@ -540,3 +540,8 @@ def updateILBoardLight(levels = levelNames.keys(),
     for level in levels:
         for category in categories:
             generateILBoard(level, category)
+
+
+def updateLeaderboardLight(categories = ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]):
+    for category in categories:
+        generateLeaderboard(category)
