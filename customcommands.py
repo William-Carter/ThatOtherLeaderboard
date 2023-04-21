@@ -281,7 +281,7 @@ class RegisterCommand(cobble.command.Command):
             output - A table displaying the leaderboard
         """
         srcomID = srcomAPIHandler.getIDFromName(argumentValues['srcomName'])
-        if not srcomID:
+        if not srcomID: 
             return f"No speedrun.com account with name {argumentValues['srcomName']}!"
     
         if dbm.srcomIDAlreadyInUse(srcomID):
@@ -335,7 +335,12 @@ class SetupCommand(cobble.command.Command):
         Returns:
             response - A string response containing a list of the player's setup elements
         """
+
+
+
         if len(argumentValues.keys()) == 0:
+            if not dbm.userAlreadyRegistered(messageObject.author.id):
+                return "User must be registered!"
             runnerID = dbm.getTolAccountID(discordID=messageObject.author.id)
             runnerName = messageObject.author.name
 
@@ -345,6 +350,8 @@ class SetupCommand(cobble.command.Command):
                 return f"No account associated with {argumentValues['name']}!"
             runnerName = argumentValues['name']
 
+
+        
         setup = dbm.getSetupFromTolID(runnerID)
         setupDict = {}
         
@@ -403,7 +410,7 @@ class UpdateSetupCommand(cobble.command.Command):
             case "dpi":
                 if not cobble.validations.IsInteger.validate("", value):
                     return "DPI must be a valid integer!"
-                if cobble.validations.IsPositive.validate("", value):
+                if not cobble.validations.IsPositive.validate("", value):
                     return "DPI must be positive!"
                 
             case "sensitivity":
@@ -438,6 +445,8 @@ class ILSubmitCommand(cobble.command.Command):
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         demoPath = await self.downloadDemo(attachedFiles["Demo"])
         demo = upp.DemoParse(demoPath)
+        if not demo.valid:
+            return f"What the fuck, {messageObject.author.name}"
         tolID = dbm.getTolAccountID(discordID=messageObject.author.id)
         level = demo.map
         time = demo.time
@@ -509,6 +518,9 @@ class BatchSubmitCommand(cobble.command.Command):
                 date = timeModule.gmtime(os.path.getmtime(workingPath+file))
                 date_formatted = f"{date[0]}-{date[1]}-{date[2]}"
                 demo = upp.DemoParse(workingPath+file)
+                if not demo.valid:
+                    demoStatuses[file]["status"] = "Invalid demo file"
+                    continue
                 category = self.determineDemoCategory(file)
                 
                 if not category:

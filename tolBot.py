@@ -41,7 +41,8 @@ async def on_message(message):
         if message.content[0] == tolBot.prefix:
             permissionLevel = cobble.permissions.getUserPermissionLevel(message.author, tolBot.admins)
 
-            await message.channel.send(await tolBot.processCommand(message, message.content[1:], permissionLevel))
+            response = await tolBot.processCommand(message, message.content[1:], permissionLevel)
+            await message.channel.send(response[:(min(len(response), 1999))])
 
 
 

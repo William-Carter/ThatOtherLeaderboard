@@ -1,4 +1,4 @@
-import dbManager
+import databaseManager as dbManager
 import srcomAPIHandler
 import json
 import os
