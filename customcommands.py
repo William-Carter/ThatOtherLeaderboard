@@ -124,6 +124,26 @@ class IsSetupElement(cobble.validations.Validation):
             valid - Whether the string was successfully parsed
         """
         return (x in SetupCommand.capitalisations.keys())
+    
+
+
+
+
+
+class IsNormal(cobble.validations.Validation):
+    def __init__(self):
+        super().__init__()
+        self.requirements = "Don't be an idiot :)"
+
+    def validate(self, x: str):
+        bannedChars = r"[`*\n@]*"
+        if re.match(bannedChars, x):
+            return False
+        if len(x) > 50:
+            return False
+        return True
+
+
 
 
 ############
@@ -403,7 +423,7 @@ class UpdateSetupCommand(cobble.command.Command):
 
         super().__init__(bot, "Update Setup", "updatesetup", "Update your setup", cobble.permissions.EVERYONE)
         self.addArgument(cobble.command.Argument("element", "The part of your setup you want to update.", IsSetupElement()))
-        self.addArgument(cobble.command.Argument("value", "The value to fill for the specified element", cobble.validations.IsString()))
+        self.addArgument(cobble.command.Argument("value", "The value to fill for the specified element", IsNormal()))
 
 
 
@@ -740,7 +760,7 @@ class SetNameCommand(cobble.command.Command):
             bot - The bot object the command will belong to
         """
         super().__init__(bot, "Set Name", "setname", "Set your name on TOL", cobble.permissions.EVERYONE)
-        self.addArgument(cobble.command.Argument("name", "The value you want to set your name to", cobble.validations.IsString()))
+        self.addArgument(cobble.command.Argument("name", "The value you want to set your name to", IsNormal()))
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         tolAccount = dbm.getTolAccountID(discordID = messageObject.author.id)
