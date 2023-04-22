@@ -136,7 +136,7 @@ class IsNormal(cobble.validations.Validation):
         self.requirements = "Don't be an idiot :)"
 
     def validate(self, x: str):
-        bannedChars = r"[`*\n@]*"
+        bannedChars = r"[`*\n@]+"
         if re.match(bannedChars, x):
             return False
         if len(x) > 50:
