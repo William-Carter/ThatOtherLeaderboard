@@ -230,32 +230,45 @@ class ProfileCommand(cobble.command.Command):
         
         if len(argumentValues.keys()) == 0:
             runnerID = dbm.getTolAccountID(discordID=messageObject.author.id)
-            runnerName = messageObject.author.name
+            runnerName = dbm.getNameFromTolID(runnerID)
+            mode = "tol"
 
         elif "tol" in argumentValues.keys():
             runnerID = dbm.getTolIDFromName(argumentValues["tol"])
             runnerName = argumentValues["tol"]
+            mode = "tol"
 
         elif "srcom" in argumentValues.keys():
-            runnerID = dbm.getTolAccountID(srcomID=dbm.getSrcomIDFromSrcomName(argumentValues["srcom"]))
+            runnerID = dbm.getSrcomIDFromSrcomName(argumentValues["srcom"])
             runnerName = argumentValues["srcom"]
+            mode = "srcom"
 
         tableData = [["Category", "Time", "Place"]]
 
         forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
+        totalPlaces = 0
         for category in forCats.keys():
-            runs = dbm.getPlayerRuns(runnerID, category)
+            if mode == "tol":
+                runs = dbm.getPlayerRuns(runnerID, category)
+            elif mode == "srcom":
+                runs = dbm.getPlayerRuns("", category, srcomID=runnerID)
 
             if len(runs) > 0:
                 sortedRuns = sorted(runs, key=lambda x: x[1])
                 tableCat = forCats[category]
                 tableTime = durations.formatted(sortedRuns[0][1])
-                tablePlace = durations.formatLeaderBoardPosition(dbm.fetchLeaderboardPlace(sortedRuns[0][0], category))
+                place = dbm.fetchLeaderboardPlace(sortedRuns[0][0], category)
+                tablePlace = durations.formatLeaderBoardPosition(place)
+                totalPlaces += place
 
                 tableData.append([tableCat, tableTime, tablePlace])
 
+
+        if len(tableData) < 2:
+            return "No runs found!"
         output = f"Leaderboard for {runnerName}:\n"
-        output += "```"+neatTables.generateTable(tableData)+"```"
+        output += "```"+neatTables.generateTable(tableData)
+        output += f"Average Placement: {totalPlaces/(len(tableData)-1)}"+"```"
         return output
         
         
@@ -600,7 +613,7 @@ class ILBoardCommand(cobble.command.Command):
             start = 0
 
         if argumentValues["map"] in dbm.levelNames.values():
-            argumentValues["map"] = list(dbm.levelNames.keys())[list(dbm.levelNames.values()).index(argumentValues["map"])]
+            argumentValues["map"] = dbm.getMapFromLevelName(argumentValues["map"])
 
         lbData = dbm.generateILBoard(argumentValues["map"], argumentValues["category"])[start:start+20]
         tableData = [["Place", "Runner", "Time"]]
@@ -716,3 +729,64 @@ class SumOfILsCommand(cobble.command.Command):
         table = neatTables.generateTable(tableData)
         table = "```\n"+table+"```"
         return table
+    
+
+
+
+class SetNameCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Set Name", "setname", "Set your name on TOL", cobble.permissions.EVERYONE)
+        self.addArgument(cobble.command.Argument("name", "The value you want to set your name to", cobble.validations.IsString()))
+
+    async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
+        tolAccount = dbm.getTolAccountID(discordID = messageObject.author.id)
+        dbm.updateTolName(tolAccount, argumentValues["name"])
+        return "Account name updated"
+    
+
+
+class RunsCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Show Runs", "runs", "List all of a player's runs", cobble.permissions.TRUSTED)
+        self.addArgument(cobble.command.Argument("runner", "The runner whose runs you want to see", cobble.validations.IsString()))
+        self.addArgument(cobble.command.Argument("category", "The category of runs you want to see", IsCategory()))
+
+
+    async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
+        discordID = dbm.getDiscordIDFromName(argumentValues["runner"])
+        if not discordID:
+            return f"No runner registered with name '{argumentValues['runner']}'"
+        tolID = dbm.getTolAccountID(discordID=discordID)
+        runs = dbm.getPlayerRuns(tolID, argumentValues["category"], False, False)
+        tableData = [["RunID", "Time"]]
+        for run in runs:
+            tableData.append([str(run[0]), durations.formatted(run[1])])
+        
+        output = f"Runs by {argumentValues['runner']}:\n"
+        output += "```"+neatTables.generateTable(tableData)+"```"
+
+        return output
+    
+
+
+class DeleteRunCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Delete run", "delete", "Delete the specified run", cobble.permissions.ADMIN)
+        self.addArgument(cobble.command.Argument("runID", "The ID of the run you want to delete", cobble.validations.IsInteger()))
+
+
+    async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
+        dbm.deleteRun(int(argumentValues["runID"]))
+        return "Run deleted"

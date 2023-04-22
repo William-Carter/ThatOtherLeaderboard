@@ -198,11 +198,12 @@ def getSrcomIDFromTolID(tolAccount):
         return result[0][0]
 
 
-def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True):
+def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True, srcomID=None):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     if includeSrcom:
-        srcomID = getSrcomIDFromTolID(tolAccount)
+        if not srcomID:
+            srcomID = getSrcomIDFromTolID(tolAccount)
     else:
         srcomID = ""    
     if propagate:
@@ -312,7 +313,7 @@ def generateLeaderboard(category):
     categoryHierarchy = cur.fetchone()[0]
     cur.execute(
         """
-        SELECT srca.name, srcb.name, MIN(runs.time), runs.ID
+        SELECT srca.name, tolAccounts.name, MIN(runs.time), runs.ID
         FROM runs 
         LEFT JOIN srcomAccounts srca ON runs.srcomAccount = srca.ID
         LEFT JOIN tolAccounts ON runs.tolAccount = tolAccounts.ID
@@ -545,3 +546,59 @@ def updateILBoardLight(levels = levelNames.keys(),
 def updateLeaderboardLight(categories = ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]):
     for category in categories:
         generateLeaderboard(category)
+
+
+def getSumOfBest(tolAccount: int, category: str) -> dict:
+    """
+    Returns a dictionary containing a user's golds for every map, keyed to the level name
+    """
+
+    golds = {x: "" for x in levelNames.values[:17]}
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT level, time
+    FROM ilRuns
+    WHERE category = ? AND tolAccount = ?
+    """, (category, tolAccount))
+    result = cur.fetchall()
+    conn.close()
+
+    for gold in result:
+        golds[levelNames[result[0]]] = result[1]
+
+
+
+def getMapFromLevelName(levelName):
+    return list(levelNames.keys())[list(levelNames.values()).index(levelName)]
+
+
+def updateTolName(tolAccount, newName):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    UPDATE tolAccounts 
+    SET Name = ?
+    WHERE ID=?
+    """, (newName, tolAccount))
+    result = cur.fetchall()
+    conn.commit()
+    conn.close()
+
+
+def deleteRun(runID):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM runs WHERE ID = ?", (runID,))
+    conn.commit()
+
+
+def getDiscordIDFromName(name: str):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT discordID FROM tolAccounts WHERE name = ?", (name,))
+    results = cur.fetchall()
+    if len(results) > 0:
+        return results[0][0]
+    else:
+        return False

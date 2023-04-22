@@ -75,4 +75,15 @@ CREATE TABLE "setupElements" (
 )
 """)
 
+
+cur.execute("""
+CREATE TABLE "sumOfBests" (
+	"userID"	INTEGER NOT NULL,
+	"category"	TEXT NOT NULL,
+	"map"	TEXT NOT NULL,
+	"time"	REAL NOT NULL,
+	PRIMARY KEY("userID","category","map")
+)
+""")
+
 conn.commit()
