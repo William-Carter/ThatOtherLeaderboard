@@ -313,32 +313,26 @@ def generateLeaderboard(category):
     categoryHierarchy = cur.fetchone()[0]
     cur.execute(
         """
-        SELECT srca.name, tolAccounts.name, MIN(runs.time), runs.ID
-        FROM runs 
-        LEFT JOIN srcomAccounts srca ON runs.srcomAccount = srca.ID
-        LEFT JOIN tolAccounts ON runs.tolAccount = tolAccounts.ID
-        LEFT JOIN srcomAccounts srcb ON tolAccounts.srcomID = srcb.ID
-        LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
-        WHERE categoryHierarchy.hierarchy >= ?
-        GROUP BY srca.ID, tolAccounts.ID, srcb.ID
-
-        ORDER BY runs.time
+        SELECT COALESCE(ta.Name, sa.Name), r.ID, MIN(r.time)
+        FROM runs r
+        LEFT JOIN tolAccounts ta on r.tolAccount = ta.ID OR r.srcomAccount = ta.srcomID
+        LEFT JOIN srcomAccounts sa on r.srcomAccount = sa.ID
+        LEFT JOIN categoryHierarchy ch on r.category = ch.categoryName
+        WHERE ch.hierarchy >= ?
+        GROUP BY COALESCE(ta.ID, 'N/A'), COALESCE(ta.srcomID, sa.ID, 'N/A')
+        ORDER BY r.time ASC
         """, (categoryHierarchy,))
     
     result = cur.fetchall()
     output = {}
     for run in result:
         time = run[2]
-        if run[0]:
-            name = run[0]
-        else:
-            name = run[1]
-
+        name = run[0]
         if name in output.keys():
             if time < output[name]["t"]:
-                output[name] = {"t": time, "id": run[3]}
+                output[name] = {"t": time, "id": run[1]}
         else:
-            output[name] = {"t": time, "id": run[3]}
+            output[name] = {"t": time, "id": run[1]}
 
     with open(dirPath+"/leaderboardReferences/"+category+".json", "w", newline="") as f:
         placementDict = {}
