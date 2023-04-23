@@ -244,14 +244,14 @@ def getTolIDFromILID(ILID: int):
     else:
         return False
     
-def getNameFromTolID(tolID: int):
+def getNameFromTolID(tolID: int, clip: int = 12):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     cur.execute("SELECT name FROM tolAccounts WHERE ID = ?", (tolID,))
     result = cur.fetchall()
     conn.commit()
     if len(result) >= 1:
-        return result[0][0]
+        return result[0][0][:clip-1]
     else:
         return False
 
@@ -338,9 +338,11 @@ def generateLeaderboard(category):
         placementDict = {}
         currentTime = -1
         placement = 0
+        truePlacement = 0
         for runner in output.keys():
+            truePlacement += 1
             if output[runner]["t"] > currentTime:
-                placement += 1
+                placement = truePlacement
             currentTime = output[runner]["t"]   
             placementDict[output[runner]["id"]] = placement
 
@@ -497,9 +499,11 @@ def generateILBoard(level, category):
         placementDict = {}
         currentTime = -1
         placement = 0
+        truePlacement = 0
         for runner in output.keys():
+            truePlacement += 1
             if output[runner]["t"] > currentTime:
-                placement += 1
+                placement = truePlacement
             currentTime = output[runner]["t"]   
             placementDict[output[runner]["id"]] = placement
 
