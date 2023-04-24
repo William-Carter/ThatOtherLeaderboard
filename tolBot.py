@@ -26,6 +26,7 @@ tolBot.addCommand(customcommands.ILPBsCommand(tolBot))
 tolBot.addCommand(customcommands.SumOfILsCommand(tolBot))
 tolBot.addCommand(customcommands.RunsCommand(tolBot))
 tolBot.addCommand(customcommands.DeleteRunCommand(tolBot))
+tolBot.addCommand(customcommands.BehalfCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 
