@@ -4,6 +4,7 @@ import srcomAPIHandler
 import durations
 import csv
 import json
+import time as timeModule
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
 levelNames = {
@@ -39,7 +40,6 @@ def insertTolAccount(name: str, discordID: str = None, srcomID: str = None):
     command = "INSERT INTO tolAccounts (Name"
     secondPhrase = "VALUES (?"
     bindings = [name]
-
 
     if discordID:
         command += ", discordID"
@@ -228,9 +228,46 @@ def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True, srcom
             FROM runs
             WHERE category = ? AND (tolAccount = ? OR srcomAccount = ?)
         """, (category, tolAccount, srcomID))
-    runs = [[x[0], x[1]] for x in cur.fetchall()]
+    runs = cur.fetchall()
     conn.close()
     return runs
+
+
+def getPb(tolAccount, category, includeSrcom=True, srcomID=None):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    if not srcomID:
+        cur.execute(
+        """
+        SELECT ID, MIN(time) 
+        FROM runs
+        LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
+        WHERE categoryHierarchy.hierarchy >= (
+        SELECT hierarchy
+        FROM categoryHierarchy
+        WHERE categoryName = ?
+        )
+        AND (tolAccount = ? OR srcomAccount = (
+        SELECT srcomID FROM tolAccounts WHERE ID = ?
+        ))
+    """, (category, tolAccount, tolAccount))
+    else:
+        cur.execute(
+        """
+        SELECT ID, MIN(time) 
+        FROM runs
+        LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
+        WHERE categoryHierarchy.hierarchy >= (
+        SELECT hierarchy
+        FROM categoryHierarchy
+        WHERE categoryName = ?
+        )
+        AND srcomAccount = ?""", (category, srcomID))
+  
+
+    run = cur.fetchone()
+    conn.close()
+    return run
 
 
 def getTolIDFromILID(ILID: int):
@@ -600,3 +637,84 @@ def getDiscordIDFromName(name: str):
         return results[0][0]
     else:
         return False
+    
+    
+
+
+def getAverageRank(tolAccount, leaderBoardReferences: dict, srcomAccount = None, ):
+    totalPlaces = 0
+    totalCategories = 0
+    for cat in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+        if srcomAccount:
+            pb = getPb("", cat, srcomID=srcomAccount)
+        else:
+            pb = getPb(tolAccount, cat)
+
+ 
+        if not pb[0]:
+            return (None, 0)
+            
+        
+        totalCategories += 1
+        place = leaderBoardReferences[cat][str(pb[0])]
+        totalPlaces += place
+
+
+            
+        
+
+    return (round(totalPlaces/totalCategories, 2), totalCategories)
+
+    
+
+def getRunnerAccounts():
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT tolAccounts.ID, srcomAccounts.ID, COALESCE(tolAccounts.Name, srcomAccounts.Name)
+    FROM tolAccounts
+    FULL OUTER JOIN srcomAccounts
+    ON tolAccounts.srcomID = srcomAccounts.ID
+    """)
+    results = cur.fetchall()
+    conn.close()
+    if len(results) > 0:
+        return results
+    else:
+        return False
+    
+
+def getAverageRankLeaderboard(useCache=True):
+    if useCache:
+        with open(dirPath+"/leaderboardReferences/averageRankLeaderboard.json", "r") as f:
+            averageRanks = json.load(f)
+        return averageRanks
+
+
+    # Load the placement references into memory for quick access
+    placementReferences = {}
+    for cat in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+        with open(dirPath+"/leaderBoardReferences/"+cat+".json", "r") as f:
+            placementReferences[cat] = json.load(f)
+
+
+
+    accounts = getRunnerAccounts()
+    averageRanks = []
+    for account in accounts:
+        if account[1] and not account[0]:
+            averageRank = getAverageRank("", placementReferences, account[1])
+        else:
+            averageRank = getAverageRank(account[0], placementReferences)
+
+        if averageRank[1] == 5:
+            averageRanks.append((account[2], averageRank[0]))
+
+    
+
+
+
+    averageRanks = sorted(averageRanks, key=lambda x: x[1])
+    with open(dirPath+"/leaderboardReferences/averageRankLeaderboard.json", "w") as f:
+        json.dump(averageRanks, f)
+    return averageRanks

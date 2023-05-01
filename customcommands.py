@@ -12,6 +12,7 @@ import zipfile
 import shutil
 import untitledParserParser as upp
 import regex as re
+import json
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
 ###############
@@ -193,6 +194,7 @@ class SubmitCommand(cobble.command.Command):
         self.addArgument(cobble.command.Argument("category", "The category your run is of", IsCategory()))
         self.addArgument(cobble.command.Argument("time", "The duration of your run", IsDuration()))
         self.addArgument(cobble.command.Argument("date", "The date your run was performed on", cobble.validations.IsISO8601(), True))
+        self.postCommand = lambda: dbm.getAverageRankLeaderboard(False)
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         time =  round(round((durations.seconds(argumentValues["time"])/0.015), 0)*0.015, 3) # Convert entered time to seconds and correct to the nearest tick value
@@ -851,3 +853,33 @@ class BehalfCommand(cobble.command.Command):
         dbm.generateLeaderboard("inbounds")
 
         return f"Run submitted on behalf of {argumentValues['runner']}"
+    
+
+class AverageRankLeaderboardCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Average Rank Leaderboard", "arboard", "Show the leaderboard for average ranks", cobble.permissions.EVERYONE)
+        self.addArgument(cobble.command.Argument("start", "What place to start from", cobble.validations.IsInteger(), True))
+        
+
+
+    async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
+        """
+        Generate a leaderboard for the given category
+        Parameters:
+            argumentValues - a dictionary containing values for every argument provided, keyed to the argument name
+        """
+        if not "start" in argumentValues:
+            argumentValues["start"] = 1
+
+        averageRanks = dbm.getAverageRankLeaderboard()[argumentValues["start"]-1:argumentValues["start"]+19]
+        
+        tableData = [["Place", "Runner", "Average Rank"]]
+        for index, entry in enumerate(averageRanks):
+            tableData.append([str(index+1)+".", entry[0], str(entry[1])])
+
+        table = "```"+neatTables.generateTable(tableData, padding=2)+"```"
+        return table

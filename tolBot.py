@@ -27,6 +27,7 @@ tolBot.addCommand(customcommands.SumOfILsCommand(tolBot))
 tolBot.addCommand(customcommands.RunsCommand(tolBot))
 tolBot.addCommand(customcommands.DeleteRunCommand(tolBot))
 tolBot.addCommand(customcommands.BehalfCommand(tolBot))
+tolBot.addCommand(customcommands.AverageRankLeaderboardCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -45,8 +46,10 @@ async def on_message(message):
         if message.content[0] == tolBot.prefix:
             permissionLevel = cobble.permissions.getUserPermissionLevel(message.author, tolBot.admins)
 
-            response = await tolBot.processCommand(message, message.content[1:], permissionLevel)
+            response, postCommand = await tolBot.processCommand(message, message.content[1:], permissionLevel)
             await message.channel.send(response[:(min(len(response), 1999))])
+            postCommand()
+
 
 
 
