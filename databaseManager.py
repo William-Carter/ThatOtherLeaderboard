@@ -718,3 +718,17 @@ def getAverageRankLeaderboard(useCache=True):
     with open(dirPath+"/leaderboardReferences/averageRankLeaderboard.json", "w") as f:
         json.dump(averageRanks, f)
     return averageRanks
+
+
+
+def updateSrcomRunTime(runID, time):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    UPDATE runs 
+    SET time = ?
+    WHERE srcomID = ?
+    """, (time, runID))
+    result = cur.fetchall()
+    conn.commit()
+    conn.close()
