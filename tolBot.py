@@ -13,7 +13,7 @@ tolBot = cobble.bot.Bot(dirPath+"/config.json", "tolBot", ".")
 tolBot.addCommand(cobble.command.HelpCommand(tolBot))
 tolBot.addCommand(cobble.command.ListCommand(tolBot))
 tolBot.addCommand(customcommands.RegisterCommand(tolBot))
-tolBot.addCommand(customcommands.SetNameCommand(tolBot))
+#tolBot.addCommand(customcommands.SetNameCommand(tolBot))
 tolBot.addCommand(customcommands.LeaderboardCommand(tolBot))
 tolBot.addCommand(customcommands.SubmitCommand(tolBot))
 tolBot.addCommand(customcommands.ProfileCommand(tolBot))
@@ -48,7 +48,8 @@ async def on_message(message):
 
             response, postCommand = await tolBot.processCommand(message, message.content[1:], permissionLevel)
             await message.channel.send(response[:(min(len(response), 1999))])
-            postCommand()
+            if postCommand:
+                postCommand()
 
 
 

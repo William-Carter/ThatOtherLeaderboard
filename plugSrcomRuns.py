@@ -35,6 +35,9 @@ for category in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
             else:
                 dbManager.insertRun(category, time, date, srcomAccount=srcomPlayerID, srcomID=runID)
 
+        else:
+            dbManager.updateSrcomRunTime(runID, time)
+
             
         
         

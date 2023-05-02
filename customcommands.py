@@ -137,8 +137,8 @@ class IsNormal(cobble.validations.Validation):
         self.requirements = "Don't be an idiot :)"
 
     def validate(self, x: str):
-        bannedChars = r"[`*\n@]+"
-        if re.match(bannedChars, x):
+        bannedChars = r"[`*\n@]+|https://|http://"
+        if re.search(bannedChars, x):
             return False
         if len(x) > 50:
             return False
@@ -766,6 +766,8 @@ class SetNameCommand(cobble.command.Command):
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         tolAccount = dbm.getTolAccountID(discordID = messageObject.author.id)
+        if argumentValues["name"] == "alatreph" and messageObject.author.id != 836238555482816542:
+            return "Fuck you"
         dbm.updateTolName(tolAccount, argumentValues["name"])
         return "Account name updated"
     
@@ -863,6 +865,7 @@ class AverageRankLeaderboardCommand(cobble.command.Command):
         """
         super().__init__(bot, "Average Rank Leaderboard", "arboard", "Show the leaderboard for average ranks", cobble.permissions.EVERYONE)
         self.addArgument(cobble.command.Argument("start", "What place to start from", cobble.validations.IsInteger(), True))
+        self.addArgument(cobble.command.Argument("useCache", "Whether to use the stored values or recalculate them", cobble.validations.IsBool(), True))
         
 
 
@@ -875,11 +878,24 @@ class AverageRankLeaderboardCommand(cobble.command.Command):
         if not "start" in argumentValues:
             argumentValues["start"] = 1
 
-        averageRanks = dbm.getAverageRankLeaderboard()[argumentValues["start"]-1:argumentValues["start"]+19]
+        argumentValues["start"] = int(argumentValues["start"])
+
+        
+        
+        
+        useCache = True
+        if "useCache" in argumentValues:
+            if argumentValues["useCache"] == "false":
+                useCache = False
+                
+            
+
+        averageRanks = dbm.getAverageRankLeaderboard(useCache)[argumentValues["start"]-1:argumentValues["start"]+19]
         
         tableData = [["Place", "Runner", "Average Rank"]]
         for index, entry in enumerate(averageRanks):
-            tableData.append([str(index+1)+".", entry[0], str(entry[1])])
+            tableData.append([str(index+argumentValues["start"]
+                                  )+".", entry[0], str(entry[1])])
 
         table = "```"+neatTables.generateTable(tableData, padding=2)+"```"
         return table
