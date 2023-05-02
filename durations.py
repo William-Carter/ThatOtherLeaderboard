@@ -24,6 +24,8 @@ def formatted(timeNum: float):
     result = result+('0'*(3-len(result.split(".")[-1])))
     return result
 
+def correctToTick(timeNum: float) -> float:
+    return round(round((timeNum/0.015), 0)*0.015, 3)
 
 def formatLeaderBoardPosition(position: int):
     suffix = "th"

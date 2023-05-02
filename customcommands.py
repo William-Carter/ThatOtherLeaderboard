@@ -194,10 +194,14 @@ class SubmitCommand(cobble.command.Command):
         self.addArgument(cobble.command.Argument("category", "The category your run is of", IsCategory()))
         self.addArgument(cobble.command.Argument("time", "The duration of your run", IsDuration()))
         self.addArgument(cobble.command.Argument("date", "The date your run was performed on", cobble.validations.IsISO8601(), True))
-        self.postCommand = lambda: dbm.getAverageRankLeaderboard(False)
+
+
+    def postCommand(self):
+        dbm.updateLeaderboardLight()
+        dbm.getAverageRankLeaderboard(False)
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
-        time =  round(round((durations.seconds(argumentValues["time"])/0.015), 0)*0.015, 3) # Convert entered time to seconds and correct to the nearest tick value
+        time =  durations.correctToTick(durations.seconds(argumentValues["time"])) # Convert entered time to seconds and correct to the nearest tick value
         runnerID = dbm.getTolAccountID(discordID = messageObject.author.id)
         if not runnerID:
             return "User is not registered. Please register with .register to submit runs."
@@ -220,7 +224,7 @@ class SubmitCommand(cobble.command.Command):
 
 
         dbm.insertRun(argumentValues["category"], time, argumentValues["date"], runnerID)
-        dbm.updateLeaderboardLight()
+        
 
         return "Run submitted"
 
@@ -809,6 +813,7 @@ class DeleteRunCommand(cobble.command.Command):
         """
         super().__init__(bot, "Delete run", "delete", "Delete the specified run", cobble.permissions.ADMIN)
         self.addArgument(cobble.command.Argument("runID", "The ID of the run you want to delete", cobble.validations.IsInteger()))
+        self.postCommand = lambda: dbm.updateLeaderboardLight()
 
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
@@ -899,3 +904,32 @@ class AverageRankLeaderboardCommand(cobble.command.Command):
 
         table = "```"+neatTables.generateTable(tableData, padding=2)+"```"
         return table
+
+
+class TicksCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Tick Info", "ticks", "Convert a time to ticks", cobble.permissions.EVERYONE)
+        self.addArgument(cobble.command.Argument("time", "The duration you want to convert", IsDuration()))
+    
+    async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
+        """
+        Generate a leaderboard for the given category
+        Parameters:
+            argumentValues - a dictionary containing values for every argument provided, keyed to the argument name
+        """
+        # Whether it had to round
+        # Rounded time given back
+        # Number of ticks
+
+        timeString = argumentValues["time"]
+        timeNum = durations.seconds(timeString)
+        roundedTimeNum = durations.correctToTick(timeNum)
+        roundedTimeString = durations.formatted(roundedTimeNum)
+        rounded = not (timeNum == roundedTimeNum)
+        ticks = int(round(roundedTimeNum/0.015, 0))
+        return f"Had to round: {rounded}\nTime: {roundedTimeString}\nTicks: {ticks}"
+
