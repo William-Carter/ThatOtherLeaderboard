@@ -767,8 +767,9 @@ def getCommgolds(category):
     SELECT ta.Name, golds.map, MIN(golds.time)
     FROM golds
     LEFT JOIN tolAccounts ta on ta.ID = golds.userID
+    WHERE CATEGORY = ?
     GROUP BY golds.map
-    """)
+    """, (category,))
     result = cur.fetchall()
     conn.close()
     return result

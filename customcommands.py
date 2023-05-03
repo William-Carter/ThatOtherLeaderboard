@@ -1033,4 +1033,4 @@ class CommGoldsCommand(cobble.command.Command):
 
         table = neatTables.generateTable(tableData)
 
-        return f"Golds for {argumentValues['category']}:\n```{table}```"
+        return f"Commgolds for {argumentValues['category']}:\n```{table}```"
