@@ -32,6 +32,7 @@ tolBot.addCommand(customcommands.TicksCommand(tolBot))
 tolBot.addCommand(customcommands.UpdateGoldsCommand(tolBot))
 tolBot.addCommand(customcommands.GoldsCommand(tolBot))
 tolBot.addCommand(customcommands.CommGoldsCommand(tolBot))
+tolBot.addCommand(customcommands.EligibleCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 

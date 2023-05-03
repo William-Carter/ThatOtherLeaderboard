@@ -34,6 +34,21 @@ levelNames = {
         "testchmb_a_14_advanced": "a18"
     }
 
+# Maps where you have to be using the wr route to be eligible for comgold
+comgoldEligibility = {
+    "oob": [
+        "testchmb_a_00"
+    ],
+    "inbounds": [
+        "testchmb_a_01",
+        "testchmb_a_09",
+        "testchmb_a_11"
+    ],
+    "unrestricted": [],
+    "legacy": [],
+    "glitchless": []
+}
+
 def insertTolAccount(name: str, discordID: str = None, srcomID: str = None):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
@@ -735,11 +750,16 @@ def updateSrcomRunTime(runID, time):
 
 
 def addOrUpdateGold(tolID, category, map, time):
+    
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     cur.execute("SELECT COUNT(userID) FROM golds WHERE userID=? AND category=? AND map=?", (tolID, category, map))
     if cur.fetchone()[0] == 0:
-        cur.execute("INSERT INTO golds VALUES (?, ?, ?, ?)", (tolID, category, map, time))
+        if map in comgoldEligibility[category]:
+            eligible = "no"
+        else:
+            eligible = "yes"
+        cur.execute("INSERT INTO golds VALUES (?, ?, ?, ?, ?)", (tolID, category, map, time, eligible))
 
     else:
         cur.execute("UPDATE golds SET time = ? WHERE userID=? AND category=? AND map=?", (time, tolID, category, map))
@@ -767,9 +787,33 @@ def getCommgolds(category):
     SELECT ta.Name, golds.map, MIN(golds.time)
     FROM golds
     LEFT JOIN tolAccounts ta on ta.ID = golds.userID
-    WHERE CATEGORY = ?
+    WHERE CATEGORY = ? AND comgoldEligible = "yes"
     GROUP BY golds.map
     """, (category,))
     result = cur.fetchall()
     conn.close()
     return result
+
+
+def getComgoldEligibility(tolID, category, map):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT comgoldEligible
+    FROM golds
+    WHERE userID = ? AND category = ? AND map = ?
+    """, (tolID, category, map))
+    result = cur.fetchone()
+    conn.close()
+    return result
+
+
+def updateComgoldEligibility(eligible, tolID, category, map):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    UPDATE golds
+    SET comgoldEligible = ?
+    WHERE userID=? AND category=? AND map=?
+    """, (eligible, tolID, category, map))
+    conn.commit()
