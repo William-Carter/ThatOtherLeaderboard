@@ -29,6 +29,9 @@ tolBot.addCommand(customcommands.DeleteRunCommand(tolBot))
 tolBot.addCommand(customcommands.BehalfCommand(tolBot))
 tolBot.addCommand(customcommands.AverageRankLeaderboardCommand(tolBot))
 tolBot.addCommand(customcommands.TicksCommand(tolBot))
+tolBot.addCommand(customcommands.UpdateGoldsCommand(tolBot))
+tolBot.addCommand(customcommands.GoldsCommand(tolBot))
+tolBot.addCommand(customcommands.CommGoldsCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 

@@ -732,3 +732,43 @@ def updateSrcomRunTime(runID, time):
     result = cur.fetchall()
     conn.commit()
     conn.close()
+
+
+def addOrUpdateGold(tolID, category, map, time):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(userID) FROM golds WHERE userID=? AND category=? AND map=?", (tolID, category, map))
+    if cur.fetchone()[0] == 0:
+        cur.execute("INSERT INTO golds VALUES (?, ?, ?, ?)", (tolID, category, map, time))
+
+    else:
+        cur.execute("UPDATE golds SET time = ? WHERE userID=? AND category=? AND map=?", (time, tolID, category, map))
+
+    conn.commit()
+
+
+def grabGolds(tolID, category):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT map, time
+    FROM golds
+    WHERE userID = ?
+    """, (tolID,))
+    result = cur.fetchall()
+    conn.close()
+    return result
+
+
+def getCommgolds(category):
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT ta.Name, golds.map, MIN(golds.time)
+    FROM golds
+    LEFT JOIN tolAccounts ta on ta.ID = golds.userID
+    GROUP BY golds.map
+    """)
+    result = cur.fetchall()
+    conn.close()
+    return result

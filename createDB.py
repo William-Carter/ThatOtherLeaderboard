@@ -86,4 +86,13 @@ CREATE TABLE "sumOfBests" (
 )
 """)
 
+
+cur.execute("""
+CREATE TABLE "categoryHierarchy" (
+	"categoryName"	TEXT,
+	"hierarchy"	INTEGER NOT NULL,
+	PRIMARY KEY("categoryName")
+)
+""")
+
 conn.commit()
