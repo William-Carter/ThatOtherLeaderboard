@@ -753,8 +753,8 @@ def grabGolds(tolID, category):
     cur.execute("""
     SELECT map, time
     FROM golds
-    WHERE userID = ?
-    """, (tolID,))
+    WHERE userID = ? AND category = ?
+    """, (tolID, category))
     result = cur.fetchall()
     conn.close()
     return result
