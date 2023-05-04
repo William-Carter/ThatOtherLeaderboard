@@ -997,13 +997,14 @@ class GoldsCommand(cobble.command.Command):
         golds = dbm.grabGolds(tolID, argumentValues["category"])
         golds = sorted(golds, key= lambda x: list(dbm.levelNames.keys()).index(x[0]))
 
-        sob = durations.formatted(sum([x[1] for x in golds]))
+        
 
         tableData = [["Level", "Time"]]
         for gold in golds:
             tableData.append([dbm.levelNames[gold[0]], str(durations.formatted(gold[1]))])
 
         table = neatTables.generateTable(tableData)
+        sob = durations.formatted(sum([x[1] for x in golds]))
         table += "\nSum of Best: "+sob
 
         return f"Golds for {argumentValues['category']}:\n```{table}```"
@@ -1032,6 +1033,8 @@ class CommGoldsCommand(cobble.command.Command):
             tableData.append([dbm.levelNames[gold[1]], str(durations.formatted(gold[2])), gold[0]])
 
         table = neatTables.generateTable(tableData)
+        sob = durations.formatted(sum([x[2] for x in golds]))
+        table += "\nCommunity Sum of Best: "+sob
 
         return f"Commgolds for {argumentValues['category']}:\n```{table}```"
     
@@ -1056,7 +1059,11 @@ class EligibleCommand(cobble.command.Command):
 
         if argumentValues["level"] in dbm.levelNames.values():
             argumentValues["level"] = dbm.getMapFromLevelName(argumentValues["level"])
-        currentEligiblity = dbm.getComgoldEligibility(tolID, argumentValues["category"], argumentValues["level"])[0]
+
+        currentEligiblity = dbm.getComgoldEligibility(tolID, argumentValues["category"], argumentValues["level"])
+        if not currentEligiblity:
+            return "User does not have this gold!"
+        currentEligiblity = currentEligiblity[0]
         print(currentEligiblity)
 
         response = f"Your gold for {dbm.levelNames[argumentValues['level']]} is "
