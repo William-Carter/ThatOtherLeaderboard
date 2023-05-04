@@ -77,12 +77,13 @@ CREATE TABLE "setupElements" (
 
 
 cur.execute("""
-CREATE TABLE "sumOfBests" (
+CREATE TABLE "golds" (
 	"userID"	INTEGER NOT NULL,
 	"category"	TEXT NOT NULL,
 	"map"	TEXT NOT NULL,
-	"time"	REAL NOT NULL,
-	PRIMARY KEY("userID","category","map")
+	"time" REAL NOT NULL,
+	"comgoldEligible"	TEXT NOT NULL DEFAULT 'yes',
+	PRIMARY KEY("userID", "category", "map")
 )
 """)
 
