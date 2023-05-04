@@ -425,11 +425,12 @@ def fetchLeaderboardPlace(runID, category=None):
         return False
 
     
-def fetchILPlace(runID):
+def fetchILPlace(runID, category=None):
+    if not category:
+        category = getCategoryFromILID(runID)
     level = getLevelFromILID(runID)
     if not level:
         return False
-    category = getCategoryFromILID(runID)
     if not category:
         return False
     with open(dirPath+"/leaderboardReferences/"+level+"_"+category+".json", "r") as f:

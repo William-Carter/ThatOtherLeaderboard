@@ -660,7 +660,7 @@ class ILBoardCommand(cobble.command.Command):
         lbData = dbm.generateILBoard(argumentValues["map"], argumentValues["category"])[start:start+20]
         tableData = [["Place", "Runner", "Time"]]
         for entry in lbData:
-            place = durations.formatLeaderBoardPosition(dbm.fetchILPlace(entry[0]))
+            place = durations.formatLeaderBoardPosition(dbm.fetchILPlace(entry[0], argumentValues["category"]))
             runner = entry[1]
             time = entry[2]
             tableData.append([place, runner, time])
