@@ -5,6 +5,7 @@ import durations
 import csv
 import json
 import time as timeModule
+import sanitisation
 dirPath = os.path.dirname(os.path.realpath(__file__))
 
 levelNames = {
@@ -303,7 +304,7 @@ def getNameFromTolID(tolID: int, clip: int = 12):
     result = cur.fetchall()
     conn.commit()
     if len(result) >= 1:
-        return result[0][0][:clip-1]
+        return sanitisation.sanitiseString(result[0][0][:clip-1])
     else:
         return False
 
@@ -446,7 +447,7 @@ def fetchILPlace(runID, category=None):
 def getTolIDFromName(name: str):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
-    cur.execute("SELECT ID FROM tolAccounts WHERE name = ?", (name,))
+    cur.execute("SELECT ID FROM tolAccounts WHERE LOWER(name) = ?", (name.lower(),))
     results = cur.fetchall()
     if len(results) > 0:
         return results[0][0]

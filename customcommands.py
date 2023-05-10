@@ -39,7 +39,7 @@ class IsCategory(cobble.validations.Validation):
         Returns:
             valid - Whether the string is a valid category
         """
-        return (x in self.categories)
+        return (x.lower() in self.categories)
 
 class IsILCategory(cobble.validations.Validation):
     categories = ["oob", "inbounds", "glitchless"]
@@ -127,17 +127,13 @@ class IsSetupElement(cobble.validations.Validation):
         return (x in SetupCommand.capitalisations.keys())
     
 
-
-
-
-
 class IsNormal(cobble.validations.Validation):
     def __init__(self):
         super().__init__()
         self.requirements = "Don't be an idiot :)"
 
     def validate(self, x: str):
-        bannedChars = r"[`*\n@]+|https://|http://"
+        bannedChars = r"[@]+|https://|http://"
         if re.search(bannedChars, x):
             return False
         if len(x) > 50:
@@ -147,7 +143,7 @@ class IsNormal(cobble.validations.Validation):
 class IsGoldsList(cobble.validations.Validation):
     def __init__(self):
         super().__init__()
-        self.requirements = "List of 18 times, separated by newlines"
+        self.requirements = "Must be a list of 18 times, separated by newlines"
 
     def validate(self, x: str):
         golds = x.split("\n")
@@ -786,8 +782,8 @@ class SetNameCommand(cobble.command.Command):
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         tolAccount = dbm.getTolAccountID(discordID = messageObject.author.id)
-        if argumentValues["name"] == "alatreph" and messageObject.author.id != 836238555482816542:
-            return "Fuck you"
+        if dbm.getTolIDFromName(argumentValues["name"]):
+            return "This name is already in use"
         dbm.updateTolName(tolAccount, argumentValues["name"])
         return "Account name updated"
     
@@ -1051,7 +1047,6 @@ class EligibleCommand(cobble.command.Command):
     
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         """
-        Generate a leaderboard for the given category
         Parameters:
             argumentValues - a dictionary containing values for every argument provided, keyed to the argument name
         """
