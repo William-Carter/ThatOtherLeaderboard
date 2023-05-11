@@ -404,6 +404,11 @@ class SetupCommand(cobble.command.Command):
 
         
         setup = dbm.getSetupFromTolID(runnerID)
+        if setup == False:
+            return "User has no setup information recorded!\nAdd some with the `updatesetup` command!"
+
+
+
         setupDict = {}
         
         for entry in setup:
@@ -440,7 +445,7 @@ class UpdateSetupCommand(cobble.command.Command):
         """
 
         super().__init__(bot, "Update Setup", "updatesetup", "Update your setup", cobble.permissions.EVERYONE)
-        self.addArgument(cobble.command.Argument("element", "The part of your setup you want to update.", IsSetupElement()))
+        self.addArgument(cobble.command.Argument("element", "The part of your setup you want to update", IsSetupElement()))
         self.addArgument(cobble.command.Argument("value", "The value to fill for the specified element", IsNormal()))
 
 
