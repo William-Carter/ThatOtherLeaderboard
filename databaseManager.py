@@ -380,7 +380,7 @@ def generateLeaderboard(category):
     output = {}
     for run in result:
         time = run[2]
-        name = run[0]
+        name = sanitisation.sanitiseString(run[0])
         if name in output.keys():
             if time < output[name]["t"]:
                 output[name] = {"t": time, "id": run[1]}

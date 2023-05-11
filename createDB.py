@@ -76,6 +76,18 @@ CREATE TABLE "setupElements" (
 """)
 
 
+
+
+
+cur.execute("""
+CREATE TABLE "categoryHierarchy" (
+	"categoryName"	TEXT,
+	"hierarchy"	INTEGER NOT NULL,
+	PRIMARY KEY("categoryName")
+)
+""")
+
+
 cur.execute("""
 CREATE TABLE "golds" (
 	"userID"	INTEGER NOT NULL,
@@ -84,15 +96,6 @@ CREATE TABLE "golds" (
 	"time" REAL NOT NULL,
 	"comgoldEligible"	TEXT NOT NULL DEFAULT 'yes',
 	PRIMARY KEY("userID", "category", "map")
-)
-""")
-
-
-cur.execute("""
-CREATE TABLE "categoryHierarchy" (
-	"categoryName"	TEXT,
-	"hierarchy"	INTEGER NOT NULL,
-	PRIMARY KEY("categoryName")
 )
 """)
 
