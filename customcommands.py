@@ -1047,8 +1047,8 @@ class EligibleCommand(cobble.command.Command):
             bot - The bot object the command will belong to
         """
         super().__init__(bot, "Set Commgold Eligibilty", "eligible", "Toggle whether your gold for a given level should be considered when finding commgolds.", cobble.permissions.TRUSTED)
-        self.addArgument(cobble.command.Argument("category", "The category of your golds", IsCategory()))
-        self.addArgument(cobble.command.Argument("level", "The category of your golds", IsMap()))
+        self.addArgument(cobble.command.Argument("category", "The category of your gold", IsCategory()))
+        self.addArgument(cobble.command.Argument("level", "The level to update", IsMap()))
     
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         """
@@ -1078,3 +1078,14 @@ class EligibleCommand(cobble.command.Command):
 
         return response
 
+
+class FetchDemoCommand(cobble.command.Command):
+    def __init__(self, bot: cobble.bot.Bot):
+        """
+        Parameters:
+            bot - The bot object the command will belong to
+        """
+        super().__init__(bot, "Fetch IL Demo", "fetchdemo", "Retrieve the demo for an IL", cobble.permissions.EVERYONE)
+        self.addArgument(cobble.command.Argument("category", "The category of the demo", IsILCategory()))
+        self.addArgument(cobble.command.Argument("level", "The category of your golds", IsMap()))
+        self.addArgument(cobble.command.Argument("user", "The person whose demo you want", cobble.validations.IsString(), True))
