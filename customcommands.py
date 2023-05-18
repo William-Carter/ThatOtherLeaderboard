@@ -306,7 +306,7 @@ class ProfileCommand(cobble.command.Command):
             return "No runs found!"
         output = f"Leaderboard for {runnerName}:\n"
         output += "```"+neatTables.generateTable(tableData)
-        output += f"Average Placement: {totalPlaces/(len(tableData)-1)}"+"```"
+        output += f"Average Placement: {dbm.getAverageRank(runnerID)[0]}"+"```"
         return output
         
         
@@ -732,7 +732,7 @@ class SumOfILsCommand(cobble.command.Command):
             bot - The bot object the command will belong to
         """
         super().__init__(bot, "Sum of ILs", "soils", "Show your sums of ILs", cobble.permissions.EVERYONE)
-        self.addArgument(cobble.command.Argument("tol", "The tol username of the user you want the profile of", cobble.validations.IsString(), True))
+        self.addArgument(cobble.command.Argument("tol", "The tol username of the user you want the sum of ILs of", cobble.validations.IsString(), True))
 
 
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:

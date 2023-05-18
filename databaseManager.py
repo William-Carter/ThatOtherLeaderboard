@@ -648,7 +648,7 @@ def deleteRun(runID):
 def getDiscordIDFromName(name: str):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
-    cur.execute("SELECT discordID FROM tolAccounts WHERE name = ?", (name,))
+    cur.execute("SELECT discordID FROM tolAccounts WHERE LOWER(name) = ?", (name,))
     results = cur.fetchall()
     if len(results) > 0:
         return results[0][0]
@@ -658,9 +658,24 @@ def getDiscordIDFromName(name: str):
     
 
 
-def getAverageRank(tolAccount, leaderBoardReferences: dict, srcomAccount = None, ):
-    totalPlaces = 0
+def getAverageRank(tolAccount, leaderBoardReferences: dict = None, srcomAccount = None, ):
+    if not leaderBoardReferences:
+        leaderBoardReferences = {}
+        for cat in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
+            with open(dirPath+"/leaderBoardReferences/"+cat+".json", "r") as f:
+                leaderBoardReferences[cat] = json.load(f)
+
+
     totalCategories = 0
+    totalPlaces = 0
+    weights = {
+        "oob": 23,
+        "inbounds": 23,
+        "unrestricted": 8,
+        "legacy": 23,
+        "glitchless": 23
+    }
+
     for cat in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
         if srcomAccount:
             pb = getPb("", cat, srcomID=srcomAccount)
@@ -672,15 +687,15 @@ def getAverageRank(tolAccount, leaderBoardReferences: dict, srcomAccount = None,
             return (None, 0)
             
         
-        totalCategories += 1
-        place = leaderBoardReferences[cat][str(pb[0])]
+        place = leaderBoardReferences[cat][str(pb[0])]*weights[cat]
         totalPlaces += place
+        totalCategories += 1
 
 
             
         
 
-    return (round(totalPlaces/totalCategories, 2), totalCategories)
+    return (round(totalPlaces/100, 2), totalCategories)
 
     
 
