@@ -306,7 +306,12 @@ class ProfileCommand(cobble.command.Command):
             return "No runs found!"
         output = f"Leaderboard for {runnerName}:\n"
         output += "```"+neatTables.generateTable(tableData)
-        output += f"Average Placement: {dbm.getAverageRank(runnerID)[0]}"+"```"
+        if mode == "tol":
+            averageRank = dbm.getAverageRank(runnerID)[0]
+
+        elif mode == "srcom":
+            averageRank = dbm.getAverageRank("", srcomAccount=runnerID)[0]
+        output += f"Average Placement: {averageRank}"+"```"
         return output
         
         
