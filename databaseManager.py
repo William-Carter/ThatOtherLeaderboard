@@ -669,11 +669,11 @@ def getAverageRank(tolAccount, leaderBoardReferences: dict = None, srcomAccount 
     totalCategories = 0
     totalPlaces = 0
     weights = {
-        "oob": 23,
-        "inbounds": 23,
-        "unrestricted": 8,
-        "legacy": 23,
-        "glitchless": 23
+        "oob": 10,
+        "inbounds": 10,
+        "unrestricted": 1,
+        "legacy": 10,
+        "glitchless": 10
     }
 
     for cat in ["oob", "inbounds", "unrestricted", "legacy", "glitchless"]:
@@ -695,7 +695,7 @@ def getAverageRank(tolAccount, leaderBoardReferences: dict = None, srcomAccount 
             
         
 
-    return (round(totalPlaces/100, 2), totalCategories)
+    return (round(totalPlaces/sum(weights.values()), 2), totalCategories)
 
     
 
