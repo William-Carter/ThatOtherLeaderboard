@@ -33,6 +33,7 @@ tolBot.addCommand(customcommands.UpdateGoldsCommand(tolBot))
 tolBot.addCommand(customcommands.GoldsCommand(tolBot))
 tolBot.addCommand(customcommands.CommGoldsCommand(tolBot))
 tolBot.addCommand(customcommands.EligibleCommand(tolBot))
+#tolBot.addCommand(customcommands.SweepersCommand(tolBot))
 intents = discord.Intents.default()
 intents.message_content = True
 
