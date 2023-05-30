@@ -1,7 +1,6 @@
 import cobble.command
 import cobble.validations
 import discord
-import databaseManager as dbm
 from customcommands.customvalidations import *
 
 class TicksCommand(cobble.command.Command):

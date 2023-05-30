@@ -29,9 +29,9 @@ for filename in os.listdir(commandsDir):
         module = __import__(f"customcommands.{commandName}", fromlist=[commandName])
         
         # Get the command class from the module
-        command_class = getattr(module, commandName + "Command")
+        commandClass = getattr(module, commandName + "Command")
 
-        tolBot.addCommand(command_class(tolBot))
+        tolBot.addCommand(commandClass(tolBot))
 
 
 
