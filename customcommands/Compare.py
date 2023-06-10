@@ -29,15 +29,15 @@ class CompareCommand(cobble.command.Command):
         if "runner 2" in argumentValues.keys():
             runner1ID = dbm.getTolIDFromName(argumentValues["runner 1"])
             runner2ID = dbm.getTolIDFromName(argumentValues["runner 2"])
-            if runner1ID == None:
+            if not runner1ID:
                 return f"No registered runner with name {argumentValues['runner 1']}"
-            if runner2ID == None:
+            if not runner2ID:
                 return f"No registered runner with name {argumentValues['runner 2']}"
         else:
             runner1ID = dbm.getTolAccountID(messageObject.author.id)
             runner2ID = dbm.getTolIDFromName(argumentValues["runner 1"]) # Kinda confusing but it makes it easy to do both use cases with the same code
 
-        if runner2ID == None:
+        if not runner2ID:
                 return f"No registered runner with name {argumentValues['runner 1']}"
 
         runners = [runner1ID, runner2ID]
