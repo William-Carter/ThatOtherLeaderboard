@@ -46,7 +46,7 @@ class CompareCommand(cobble.command.Command):
         match argumentValues["type"]:
              case "ranks":
                 # The empty cells are for places
-                tableData = [["Runner", "OoB", "Inbounds", "NoSLA Unr.", "NoSLA Leg.", "Glitchless"]]
+                tableData = [["Category", "OoB", "Inbounds", "NoSLA Unr.", "NoSLA Leg.", "Glitchless","", "Average Rank"]]
                 for runner in runners:
                     runnerName = dbm.getNameFromTolID(runner)
                     runnerResults = [runnerName]
@@ -59,7 +59,8 @@ class CompareCommand(cobble.command.Command):
                             place = dbm.fetchLeaderboardPlace(sortedRuns[0][0], category)
                             tablePlace = durations.formatLeaderBoardPosition(place)
                             runnerResults += [tableTime + ", " + tablePlace]
-
+                    runnerResults.append("")
+                    runnerResults.append(str(dbm.getAverageRank(runner)[0]))
                     tableData.append(runnerResults)
 
                 tableData = [list(reversed(x)) for x in list(zip(*tableData[::-1]))]
