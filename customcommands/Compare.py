@@ -62,7 +62,7 @@ class CompareCommand(cobble.command.Command):
 
                     tableData.append(runnerResults)
 
-        
+                tableData = [list(reversed(x)) for x in list(zip(*tableData[::-1]))]
                 table = neatTables.generateTable(tableData)
                 table = neatTables.codeBlock(table)
                 return table
