@@ -14,6 +14,7 @@ class GoldsCommand(cobble.command.Command):
         """
         super().__init__(bot, "Show Golds", "golds", "Show your golds for a given category", cobble.permissions.TRUSTED)
         self.addArgument(cobble.command.Argument("category", "The category of your golds", IsCategory()))
+        self.addArgument(cobble.command.Argument("tol", "The tol username of the user you want the profile of", cobble.validations.IsString(), True))
     
     async def execute(self, messageObject: discord.message, argumentValues: dict, attachedFiles: dict) -> str:
         """
@@ -21,9 +22,18 @@ class GoldsCommand(cobble.command.Command):
         Parameters:
             argumentValues - a dictionary containing values for every argument provided, keyed to the argument name
         """
-        tolID = dbm.getTolAccountID(discordID=messageObject.author.id)
+        if "tol" in argumentValues.keys():
+            runnerName = argumentValues["tol"]
+            tolID = dbm.getTolIDFromName(argumentValues["tol"])
+            if not tolID:
+                return f"No registered player with name {argumentValues['tol']}"
+        else:
+            tolID = dbm.getTolAccountID(discordID=messageObject.author.id)
+            runnerName = dbm.getNameFromTolID(tolID)
         golds = dbm.grabGolds(tolID, argumentValues["category"])
         golds = sorted(golds, key= lambda x: list(dbm.levelNames.keys()).index(x[0]))
+        if len(golds) == 0:
+            return "User has no saved golds!"
 
         
 
@@ -35,4 +45,4 @@ class GoldsCommand(cobble.command.Command):
         sob = durations.formatted(sum([x[1] for x in golds]))
         table += "\nSum of Best: "+sob
 
-        return f"Golds for {argumentValues['category']}:\n```{table}```"
+        return f"{runnerName}'s {argumentValues['category']} golds:\n```{table}```"

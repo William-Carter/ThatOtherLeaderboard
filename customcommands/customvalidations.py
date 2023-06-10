@@ -143,3 +143,11 @@ class IsGoldsList(cobble.validations.Validation):
 
         return True
 
+class IsComparisonType(cobble.validations.Validation):
+    def __init__(self):
+        super().__init__()
+        self.comparisonTypes = ["ranks"]
+        self.requirements = "Must be 'ranks' :D (More later)"
+
+    def validate(self, x: str):
+        return x in self.comparisonTypes

@@ -34,6 +34,30 @@ def generateTable(inp: List[List[str]], padding: int = 4) -> str:
     return table
 
 
+def divideOutput(output, maxLength: int = 2000):
+    outputList = []
+    rows = output.split("\n")
+    currentString = ""
+    for row in rows:
+        if len(currentString)+len(row) >= 2000:
+            outputList.append(currentString)
+            currentString = ""
+
+        currentString += row
+
+    outputList.append(currentString)
+    return outputList
+
+
+def codeBlock(inp: str | list):
+    outp = []
+    if type(inp) == str:
+        return "```\n"+inp+"```"
+    
+    for item in inp:
+        outp.append("```\n"+item+"```")
+
+    return outp
 
 
 

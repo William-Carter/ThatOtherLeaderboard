@@ -14,7 +14,7 @@ class ProfileCommand(cobble.command.Command):
             bot - The bot object the command will belong to
         """
 
-        super().__init__(bot, "Profile", "profile", "Show your profile, including all your personal bests", cobble.permissions.EVERYONE)
+        super().__init__(bot, "Profile", ["profile", "pf"], "Show your profile, including all your personal bests", cobble.permissions.EVERYONE)
         self.addArgument(cobble.command.Argument("tol", "The tol username of the user you want the profile of", cobble.validations.IsString(), True))
         self.addArgument(cobble.command.Argument("srcom", "The srcom username of the user you want the profile of", cobble.validations.IsString(), True))
 
@@ -26,7 +26,7 @@ class ProfileCommand(cobble.command.Command):
             messageObject - the object corresponding to the message that triggered the command
             argumentValues - a dictionary containing values for every argument provided, keyed to the argument name
         Returns:
-            oputput - A table displaying the leaderboard
+            output - A table displaying the leaderboard
         """
         if len(argumentValues.keys()) > 1:
             return "Can only return a profile for either a speedrun.com account or a TOL account, not both!"
@@ -37,7 +37,7 @@ class ProfileCommand(cobble.command.Command):
             mode = "tol"
 
         elif "tol" in argumentValues.keys():
-            runnerID = dbm.getTolIDFromName(argumentValues["tol"])
+            runnerID = dbm.getTolIDFromName(argumentValues["tol"].lower())
             runnerName = argumentValues["tol"]
             mode = "tol"
 
@@ -69,7 +69,7 @@ class ProfileCommand(cobble.command.Command):
 
         if len(tableData) < 2:
             return "No runs found!"
-        output = f"Leaderboard for {runnerName}:\n"
+        output = f"Profile for {runnerName}:\n"
         output += "```"+neatTables.generateTable(tableData)
         if mode == "tol":
             averageRank = dbm.getAverageRank(runnerID)[0]

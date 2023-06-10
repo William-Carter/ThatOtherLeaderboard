@@ -14,7 +14,7 @@ class LeaderboardCommand(cobble.command.Command):
         Parameters:
             bot - The bot object the command will belong to
         """
-        super().__init__(bot, "Leaderboard", "leaderboard", "Show the leaderboard for a category", cobble.permissions.EVERYONE)
+        super().__init__(bot, "Leaderboard", ["leaderboard", "lb"], "Show the leaderboard for a category", cobble.permissions.EVERYONE)
         self.addArgument(cobble.command.Argument("category", "The category you wish to see the leaderboard for", IsCategory()))
         self.addArgument(cobble.command.Argument("start", "What place to start from", cobble.validations.IsInteger(), True))
 

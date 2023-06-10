@@ -17,7 +17,7 @@ class ILSubmitCommand(cobble.command.Command):
         Parameters:
             bot - The bot object the command will belong to
         """
-        super().__init__(bot, "Submit IL", "ilsubmit", "Submit an IL to the leaderboard", cobble.permissions.TRUSTED)
+        super().__init__(bot, "Submit IL", ["ilsubmit", "isb"], "Submit an IL to the leaderboard", cobble.permissions.TRUSTED)
         self.addArgument(cobble.command.Argument("category", "The category your run is of", IsILCategory()))
         self.addFileArgument(cobble.command.FileArgument("Demo", "The demo of your IL", "dem"))
 

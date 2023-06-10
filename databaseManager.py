@@ -504,8 +504,6 @@ def getSetupFromTolID(tolID):
         return results
     else:
         return False
-    
-
 
 def generateILBoard(level, category):
     conn = sqlite3.connect(dirPath+"/tol.db")
@@ -582,6 +580,19 @@ def getRunnerILPBs(tolAccount):
     WHERE tolAccount = ?
     GROUP BY level, category
     """, (tolAccount,))
+    result = cur.fetchall()
+    conn.close()
+    return result
+
+def getILWRs():
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT ilRuns.ID, level, category, MIN(time), tolAccounts.Name
+    FROM ilRuns
+    LEFT JOIN tolAccounts ON ilRuns.tolAccount = tolAccounts.ID
+    GROUP BY level, category
+    """)
     result = cur.fetchall()
     conn.close()
     return result
