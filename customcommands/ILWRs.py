@@ -23,11 +23,15 @@ class ILWRsCommand(cobble.command.Command):
         forCats = ["glitchless", "inbounds", "oob"]
         wrs = dbm.getILWRs()
         tableData = [["Level", "Time", "Runner"]]
+        stdSum = 0
+        advSum = 0
         for level in dbm.levelNames.keys():
             row = [dbm.levelNames[level]]
 
             relevantPB = ""
             fastestValidRun = []
+
+            # 
             for wr in wrs:
                 if wr[1] == level and forCats.index(wr[2]) <= forCats.index(category):
                     if len(fastestValidRun) != 0:
@@ -37,6 +41,9 @@ class ILWRsCommand(cobble.command.Command):
                         fastestValidRun = wr
             if len(fastestValidRun) != 0:
                 wrTime = fastestValidRun[3]
+                advSum += wrTime
+                if not "adv" in level:
+                    stdSum += wrTime
                 runnerName = fastestValidRun[4]
                 relevantPB = f"{durations.formatted(wrTime)}"
                             
@@ -46,11 +53,13 @@ class ILWRsCommand(cobble.command.Command):
                 
 
             tableData.append(row)
-
+        tableData.append(["", "", ""])
+        tableData.append(["Total", durations.formatted(stdSum), ""])
+        tableData.append(["w/ Adv", durations.formatted(advSum), ""])
         table = neatTables.generateTable(tableData)
         
         
-        table = ["Current IL World Records"] + [neatTables.codeBlock(table[:1990])]
+        table = f"Current IL World Records for {category}:\n" + neatTables.codeBlock(table)
         
         
         
