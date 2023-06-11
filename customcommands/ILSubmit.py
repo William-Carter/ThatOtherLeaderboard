@@ -34,7 +34,7 @@ class ILSubmitCommand(cobble.command.Command):
         date = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
         ilID = dbm.insertIL(level, argumentValues["category"], time, date, tolID)
-        folderPath = dirPath+"/demos/ILs/"+str(ilID)
+        folderPath = dirPath+"/../demos/ILs/"+str(ilID)
         os.mkdir(folderPath)
         os.rename(demoPath, folderPath+"/"+str(ilID)+".dem")
 
@@ -43,7 +43,7 @@ class ILSubmitCommand(cobble.command.Command):
         return f"Successfully submitted a time of {durations.formatted(time)} to {dbm.levelNames[level]} {argumentValues['category']}"
 
     async def downloadDemo(self, attachment: discord.Attachment) -> str:
-        demoPath = dirPath+"/demos/temp/"+str(attachment.id)+".dem"
+        demoPath = dirPath+"/../demos/temp/"+str(attachment.id)+".dem"
         with open(demoPath, "wb") as f:
             demoBytes = await attachment.read()
             f.write(demoBytes)
