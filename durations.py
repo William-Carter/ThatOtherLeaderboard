@@ -10,18 +10,19 @@ def seconds(timeString):
     except:
         return False
 
-def formatted(timeNum: float):
+def formatted(timeNum: float) -> str:
     minutes = int(timeNum // 60)
-    sms = round(timeNum-minutes*60, 3)
+    sms = round(timeNum % 60, 3)
     result = str(sms)
     if minutes:
-        if sms < 10:
-            result = str(minutes)+":0"+result
+        
+        if sms < 10: 
+            result = str(minutes)+":0"+result # Get 5:04.5 instead of 5:4.5
 
         else:
             result = str(minutes)+":"+result
 
-    result = result+('0'*(3-len(result.split(".")[-1])))
+    result = result+('0'*(3-len(result.split(".")[-1]))) # Add trailing zeroes
     return result
 
 def correctToTick(timeNum: float) -> float:
