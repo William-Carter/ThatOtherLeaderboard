@@ -50,6 +50,8 @@ class ProfileCommand(cobble.command.Command):
 
         forCats = {"oob": "OoB", "inbounds": "Inbounds", "unrestricted": "NoSLA Unr.", "legacy": "NoSLA Leg.", "glitchless": "Glitchless"}
         totalPlaces = 0
+        amcTime = 0
+        catsUsed = 0
         for category in forCats.keys():
             if mode == "tol":
                 runs = dbm.getPlayerRuns(runnerID, category)
@@ -57,15 +59,23 @@ class ProfileCommand(cobble.command.Command):
                 runs = dbm.getPlayerRuns("", category, srcomID=runnerID)
 
             if len(runs) > 0:
+                
                 sortedRuns = sorted(runs, key=lambda x: x[1])
                 tableCat = forCats[category]
-                tableTime = durations.formatted(sortedRuns[0][1])
+                runTime = sortedRuns[0][1]
+                if category != "unrestricted":
+                    catsUsed += 1
+                    amcTime += runTime
+                tableTime = durations.formatted(runTime)
                 place = dbm.fetchLeaderboardPlace(sortedRuns[0][0], category)
                 tablePlace = durations.formatLeaderBoardPosition(place)
                 totalPlaces += place
 
                 tableData.append([tableCat, tableTime, tablePlace])
 
+        if catsUsed == 4:
+            tableData.append(["", "", ""])
+            tableData.append(["AMC Estimate", durations.formatted(amcTime), ""])
 
         if len(tableData) < 2:
             return "No runs found!"
