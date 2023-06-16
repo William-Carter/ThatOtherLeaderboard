@@ -214,7 +214,7 @@ def getSrcomIDFromTolID(tolAccount):
         return result[0][0]
 
 
-def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True, srcomID=None):
+def getPlayerRuns(tolAccount="", category="", includeSrcom=True, propagate=True, srcomID=None):
     conn = sqlite3.connect(dirPath+"/tol.db")
     cur = conn.cursor()
     if includeSrcom:
@@ -231,10 +231,10 @@ def getPlayerRuns(tolAccount, category, includeSrcom=True, propagate=True, srcom
         categoryHierarchy = cur.fetchone()[0]
         cur.execute(
             """
-            SELECT ID, time 
-            FROM runs
-            LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
-            WHERE categoryHierarchy.hierarchy >= ? AND (tolAccount = ? OR srcomAccount = ?)
+                SELECT ID, time 
+                FROM runs
+                LEFT JOIN categoryHierarchy ON runs.category = categoryHierarchy.categoryName
+                WHERE categoryHierarchy.hierarchy >= ? AND (tolAccount = ? OR srcomAccount = ?)
         """, (categoryHierarchy, tolAccount, srcomID))
 
     else:
@@ -745,6 +745,7 @@ def getAverageRankLeaderboard(useCache=True):
     accounts = getRunnerAccounts()
     averageRanks = []
     for account in accounts:
+        # account[0] is tol id, account[1] is srcom id
         if account[1] and not account[0]:
             averageRank = getAverageRank("", placementReferences, account[1])
         else:
@@ -845,3 +846,39 @@ def updateComgoldEligibility(eligible, tolID, category, map):
     WHERE userID=? AND category=? AND map=?
     """, (eligible, tolID, category, map))
     conn.commit()
+
+
+
+def generateAMCBoard():
+    conn = sqlite3.connect(dirPath+"/tol.db")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT COALESCE(runs.tolAccount, ta.ID), COALESCE(runs.srcomAccount, ta.srcomID), COALESCE(ta.Name, src.Name), category, MIN(runs.time) AS fastestTime
+    FROM runs
+    LEFT JOIN tolAccounts ta on (runs.srcomAccount = ta.srcomID) OR (runs.tolAccount = ta.ID)
+    LEFT JOIN srcomAccounts src on (runs.srcomAccount = src.ID) OR (ta.srcomID = src.ID)
+
+    GROUP BY COALESCE(COALESCE(runs.tolAccount, ta.ID), COALESCE(runs.srcomAccount, ta.srcomID)), category
+        
+    """)
+    results = cur.fetchall()
+    conn.close()
+
+    sums = {}
+
+    for result in results:
+        identifier = str(result[0]) + "-" + result[1]
+        if not identifier in sums.keys():
+            sums[identifier] = {"name": result[2], "time": 0, "contributed": 0}
+
+        if result[3] in ["oob", "inbounds", "legacy", "glitchless"]:
+            sums[identifier]["time"] += result[4]
+            sums[identifier]["contributed"] += 1
+
+    board = []
+    for value in sums.values():
+        if value["contributed"] == 4:
+            board.append({"name": value["name"], "time": value["time"]})
+        
+    board = sorted(board, key = lambda x: x["time"])
+    return board
