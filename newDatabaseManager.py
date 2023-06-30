@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import datetime
-import functools
+import cacheManager
 from typing import Callable, Any, ParamSpec, TypeVar
 dirPath = os.path.dirname(os.path.realpath(__file__))
 databaseFile = dirPath+"/tol_test.db"
@@ -376,6 +376,124 @@ def getPersonName(db: sqlite3.Cursor, personID: int) -> str | None:
     return result[0] if result else result
 
 
+@needsDatabaseConnection
+def checkSRCAccountIDTracked(db: sqlite3.Cursor, srcAccountID: str) -> bool:
+    """
+    Checks if a given speedrun.com account ID is linked to a person
+
+    Arguments:
+        srcAccountID - the id to check
+
+    Returns:
+        True if it is linked, False otherwise
+    """
+    db.execute("""
+        SELECT ID
+        FROM Persons
+        WHERE srcAccountID = ?
+    """, (srcAccountID,))
+    result = db.fetchone()
+    return True if result else False
+
+@needsDatabaseConnection
+def checkSRCRunIDAlreadyTracked(db: sqlite3.Cursor, srcRunID: str) -> bool:
+    """
+    Checks if a given speedrun.com run ID is linked to a run
+
+    Arguments:
+        srcRunID - the id to check
+
+    Returns:
+        True if it is linked, False otherwise
+    """
+    db.execute("""
+        SELECT ID
+        FROM Runs
+        WHERE srcRunID = ?
+    """, (srcRunID,))
+    result = db.fetchone()
+    return True if result else False
+
+
+@needsDatabaseConnection
+def checkForIdenticalRun(db: sqlite3.Cursor, personID: int, category: str, time: float) -> bool:
+    """
+    Checks if a person already has a run tracked of a certain time for a certain category
+    
+    Arguments:
+        personID - the ID of the person whose runs to check
+        category - the category of runs to check
+        time - the duration of the run
+
+    Returns:
+        True if the person has a matching run already, False otherwise
+    """
+    db.execute("""
+        SELECT ID
+        FROM Runs
+        WHERE personID = ?, category = ?, time = ?
+    """, (personID, category, time))
+    result = db.fetchone()
+    return True if result else False
+
+
+@needsDatabaseConnection
+def generateLeaderboard(db: sqlite3.Cursor, category: str) -> list[list[int|str|float]]:
+    """
+    Generate the leaderboard for a given category
+
+    Arguments:
+        category - The ID of the category for which you want the leaderboard
+
+    Returns:
+        A list of dicts in the format [{"id": 2, "name": "alatreph", "time": 406.38, place: 1}], sorted by time
+    """
+    db.execute("""
+    SELECT Runs.ID, Persons.Name, MIN(TIME) as fastestTime
+    FROM Runs
+    LEFT JOIN Persons on Runs.runner = Persons.ID
+    LEFT JOIN CategoryPropagation cp on (Runs.category = cp.BaseCategory AND cp.ForeignCategory = ?)
+    WHERE cp.BasePropagatesToForeign = 1
+    GROUP BY Persons.ID
+    ORDER BY fastestTime
+    """, (category,))
+    result = db.fetchall()
+    output = []
+    for index, run in enumerate(result):
+        runDict = {}
+        runDict["id"] = run[0]
+        runDict["name"] = run[1]
+        runDict["time"] = run[2]
+        runDict["place"] = int(index+1)
+        output.append(runDict)
+
+    cacheManager.cacheLeaderboard(category, output)
+    
+
+    return output
+
+
+def searchPersonName(db: sqlite3.Cursor, name: str) -> int | None:
+    """
+    Attempts to find a person with the given name
+    
+    Arguments:
+        name - the name to search
+
+    Returns:
+        The integer ID of the person if they are found, None otherwise
+    """    
+    db.execute("""
+    SELECT ID
+    FROM Persons
+    WHERE LOWER(name) = ?
+    """, (name.lower(),))
+    result = db.fetchone()
+    return result[0] if result else None
+
+
+
+
 
 if __name__ == "__main__":
-    print(getPersonName(2))
+    print(generateLeaderboard("legacy"))
